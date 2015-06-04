@@ -1,0 +1,46 @@
+.mb30{
+    margin-bottom: 30px;
+}
+
+.mb20{
+    margin-bottom: 20px;
+}
+
+.mb10{
+    margin-bottom: 10px;
+}
+
+.mt30{
+    margin-top: 30px;
+}
+
+.mt20{
+    margin-top: 20px;
+}
+
+.mt10{
+    margin-top: 10px;
+}
+
+.tiendas{
+    max-width: 100%;
+}
+
+.popover-content{
+    width: 250px;
+}
+
+.col-cards{
+    border-right: 1px solid #e1e1e1;
+    width: 9%;
+    float: left;
+    min-height: 1px;
+    padding-left: 15px;
+    padding-right: 15px;
+    position: relative;
+    opacity: 0.5;
+}
+
+.col-cards:last-child{
+    border-right: none;
+}
