@@ -48,6 +48,12 @@ class ControllerPaymentOpenpayStores extends OpenpayController {
 
             $json = array();
 
+//            if (empty($this->session->data['order_id'])) {
+//                $json['error'] = 'Missing order ID';
+//                $this->response->setOutput(json_encode($json));
+//                return;
+//            }
+
             $this->load->model('checkout/order');
             $this->language->load('payment/openpay_stores');
 
@@ -94,7 +100,14 @@ class ControllerPaymentOpenpayStores extends OpenpayController {
                 $amount = round($order_info['total'], 2);
 
                 $deadline = $this->config->get('openpay_deadline');
-                $due_date = date('Y-m-d\TH:i:s', strtotime('+ ' . $deadline . ' hours'));
+
+                if($deadline > 0){
+                    $due_date = date('Y-m-d\TH:i:s', strtotime('+' . $deadline . ' hours'));
+                }else{
+                    $due_date = date('Y-m-d\TH:i:s', strtotime('+720 hours'));
+                }
+
+
                 $charge_request = array(
                     'method' => 'store',
                     'currency' => 'mxn',

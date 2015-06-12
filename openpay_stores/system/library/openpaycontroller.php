@@ -1,6 +1,6 @@
 <?php
 
-//Openpay Stores Controller 
+//Openpay Stores Controller
 class OpenpayController extends MainController {
 
     protected $rebilling_periods;
@@ -12,14 +12,12 @@ class OpenpayController extends MainController {
 
         parent::__construct($registry);
 
-        $minTotal = $this->currency->convert(0.5, 'USD', $this->currency->getCode());
+        $this->file = $this->sanitizePath(DIR_SYSTEM.'../vendor/openpay/Openpay.php');
 
         if (!defined('MODULE_CODE'))
             define('MODULE_CODE', 'OPENPAY');
         if (!defined('MODULE_NAME'))
             define('MODULE_NAME', 'openpay_stores');
-        if (!defined('MIN_TOTAL'))
-            define('MIN_TOTAL', $minTotal);
         if (!defined('TRANSACTION_CREATE_CUSTOMER'))
             define('TRANSACTION_CREATE_CUSTOMER', 'Customer creation');
         if (!defined('TRANSACTION_CREATE_CHARGE'))
@@ -74,7 +72,7 @@ class OpenpayController extends MainController {
         $sandbox_url = "https://sandbox-api.openpay.mx/v1";
         $live_url = "https://api.openpay.mx/v1";
 
-        $file = $this->sanitizePath($this->request->server['DOCUMENT_ROOT'] . '/vendor/openpay/Openpay.php');
+        $file = $this->file;
         if (file_exists($file)) {
             require_once( $file );
         } else {
@@ -128,7 +126,7 @@ class OpenpayController extends MainController {
 
     public function getOpenpayCustomer($customer_id) {
         $result = new stdClass();
-        $file = $this->sanitizePath($this->request->server['DOCUMENT_ROOT'] . '/vendor/openpay/Openpay.php');
+        $file = $this->file;
         if (file_exists($file)) {
             require_once( $file );
         } else {
@@ -149,7 +147,7 @@ class OpenpayController extends MainController {
     public function createOpenpayCustomer($customer_data) {
         $result = new stdClass();
 
-        $file = $this->sanitizePath($this->request->server['DOCUMENT_ROOT'] . '/vendor/openpay/Openpay.php');
+        $file = $this->file;
         if (file_exists($file)) {
             require_once( $file );
         } else {
@@ -190,7 +188,7 @@ class OpenpayController extends MainController {
     public function getOpenpayCharge($customer, $charge_id) {
         $result = new stdClass();
 
-        $file = $this->sanitizePath($this->request->server['DOCUMENT_ROOT'] . '/vendor/openpay/Openpay.php');
+        $file = $this->file;
         if (file_exists($file)) {
             require_once( $file );
         } else {
@@ -227,7 +225,7 @@ class OpenpayController extends MainController {
     public function createOpenpayCharge($customer, $chargeRequest) {
         $result = new stdClass();
 
-        $file = $this->sanitizePath($this->request->server['DOCUMENT_ROOT'] . '/vendor/openpay/Openpay.php');
+        $file = $this->file;
         if (file_exists($file)) {
             require_once( $file );
         } else {
@@ -268,15 +266,15 @@ class OpenpayController extends MainController {
     public function createOpenpayWebhook($webhook_data) {
 
         $result = new stdClass();
-        
-        $file = $this->sanitizePath($this->request->server['DOCUMENT_ROOT'] . '/vendor/openpay/Openpay.php');
+
+        $file = $this->file;
         if (file_exists($file)) {
             require_once( $file );
         } else {
             $result->error = 'Openpay library is missing';
             return $result;
         }
-        
+
         $sk = $this->getSecretApiKey();
         $id = $this->getMerchantId();
 
@@ -392,7 +390,7 @@ class OpenpayController extends MainController {
                 $msg = "Ha ocurrido un error al crear el webhook. Verifica en tu panel de Openpay que este haya sido creado, es necesario instalarlo para recibir notificaciones de pago.";
                 break;
 
-            default: //Demás errores 400 
+            default: //Demás errores 400
                 $msg = "La petición no pudo ser procesada.";
                 break;
         }

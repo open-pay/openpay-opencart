@@ -38,11 +38,21 @@ class ControllerPaymentOpenpayBanks extends OpenpayBanksController {
 
     public function confirm() {
 
+//        $this->document->addScript('catalog/view/javascript/jquery/datetimepicker/bootstrap-datetimepicker.min.js');
+//        $this->document->addStyle('catalog/view/javascript/jquery/datetimepicker/bootstrap-datetimepicker.min.css');
+
         if (array_key_exists('payment_method', $this->session->data) && $this->session->data['payment_method']['code'] == 'openpay_banks') {
+
 
             $this->document->setTitle('Imprimir Recibo de Pago');
 
             $json = array();
+
+//            if (empty($this->session->data['order_id'])) {
+//                $json['error'] = 'Missing order ID';
+//                $this->response->setOutput(json_encode($json));
+//                return;
+//            }
 
             $this->load->model('checkout/order');
             $this->language->load('payment/openpay_banks');
@@ -90,7 +100,14 @@ class ControllerPaymentOpenpayBanks extends OpenpayBanksController {
                 $amount = round($order_info['total'], 2);
 
                 $deadline = $this->config->get('openpay_bank_deadline');
-                $due_date = date('Y-m-d\TH:i:s', strtotime('+ ' . $deadline . ' hours'));
+
+                if($deadline > 0){
+                    $due_date = date('Y-m-d\TH:i:s', strtotime('+' . $deadline . ' hours'));
+                }else{
+                    $due_date = date('Y-m-d\TH:i:s', strtotime('+720 hours'));
+                }
+
+
                 $charge_request = array(
                     'method' => 'bank_account',
                     'currency' => 'mxn',
@@ -203,7 +220,7 @@ class ControllerPaymentOpenpayBanks extends OpenpayBanksController {
 
         if ($json->type == 'charge.succeeded' && $json->transaction->method == 'bank_account') {
             $this->load->model('checkout/order');
-            $this->model_checkout_order->addOrderHistory($json->transaction->order_id, $this->config->get('openpay_bank_new_status_id'), '', true);
+            $this->model_checkout_order->addOrderHistory($json->transaction->order_id, $this->config->get('openpay_bank_new_status_id'));
         }
     }
 
