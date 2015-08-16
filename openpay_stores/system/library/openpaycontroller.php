@@ -13,11 +13,14 @@ class OpenpayController extends MainController {
         parent::__construct($registry);
 
         $this->file = $this->sanitizePath(DIR_SYSTEM.'../vendor/openpay/Openpay.php');
+		$minTotal = $this->currency->convert(1, 'USD', $this->currency->getCode());
 
         if (!defined('MODULE_CODE'))
             define('MODULE_CODE', 'OPENPAY');
         if (!defined('MODULE_NAME'))
             define('MODULE_NAME', 'openpay_stores');
+		if (!defined('MIN_TOTAL'))
+            define('MIN_TOTAL', $minTotal);
         if (!defined('TRANSACTION_CREATE_CUSTOMER'))
             define('TRANSACTION_CREATE_CUSTOMER', 'Customer creation');
         if (!defined('TRANSACTION_CREATE_CHARGE'))
@@ -69,40 +72,40 @@ class OpenpayController extends MainController {
 
     public function getMerchantInfo($id, $sk, $mode) {
 
-        $sandbox_url = "https://sandbox-api.openpay.mx/v1";
-        $live_url = "https://api.openpay.mx/v1";
+		$sandbox_url = "https://sandbox-api.openpay.mx/v1";
+		$live_url = "https://api.openpay.mx/v1";
 
-        $file = $this->file;
-        if (file_exists($file)) {
-            require_once( $file );
-        } else {
-            $result = new stdClass();
-            $result->error = 'Openpay library is missing';
-            return $result;
-        }
+		$file = $this->file;
+		if (file_exists($file)) {
+			require_once( $file );
+		} else {
+			$result = new stdClass();
+			$result->error = 'Openpay library is missing';
+			return $result;
+		}
 
-        $url = ($mode ? $sandbox_url : $live_url) . "/" . $id;
+		$url = ($mode ? $sandbox_url : $live_url)."/".trim($id);
 
-        $username = $sk;
-        $password = "";
+		$username = trim($sk);
+		$password = "";
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
-        $result = curl_exec($ch);
-        curl_close($ch);
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
+		$result = curl_exec($ch);
+		curl_close($ch);
 
-        $array = json_decode($result, true);
-        if (array_key_exists('id', $array)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+		$array = json_decode($result, true);
+		if (array_key_exists('id', $array)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 
-    protected function isProductionMode() {
+	protected function isProductionMode() {
         if ($this->config->get('openpay_test_mode')) {
             return false;
         } else {

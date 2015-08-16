@@ -20,7 +20,7 @@ class MainController extends Controller {
     }
 
     protected function fillSetting($setting_name, $default = '') {
-        return isset($this->request->post[$setting_name]) ? $this->request->post[$setting_name] : ( $this->config->has($setting_name) ? $this->config->get($setting_name) : $default );
+        return isset($this->request->post[$setting_name]) ? trim($this->request->post[$setting_name]) : ( $this->config->has($setting_name) ? trim($this->config->get($setting_name)) : $default );
     }
 
     protected function merge(Array &$target, Array $with, $rewrite = false) {

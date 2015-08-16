@@ -13,11 +13,14 @@ class OpenpayCardsController extends MainController {
         parent::__construct($registry);
 
         $this->file = $this->sanitizePath(DIR_SYSTEM.'../vendor/openpay/Openpay.php');
+		$minTotal = $this->currency->convert(1, 'USD', $this->currency->getCode());
 
         if (!defined('MODULE_CODE'))
             define('MODULE_CODE', 'OPENPAY');
         if (!defined('MODULE_NAME'))
             define('MODULE_NAME', 'openpay_cards');
+		if (!defined('MIN_TOTAL'))
+            define('MIN_TOTAL', $minTotal);
         if (!defined('TRANSACTION_CREATE_CUSTOMER'))
             define('TRANSACTION_CREATE_CUSTOMER', 'Customer creation');
         if (!defined('TRANSACTION_CREATE_CHARGE'))
@@ -68,9 +71,9 @@ class OpenpayCardsController extends MainController {
             return $result;
         }
 
-        $url = ($mode ? $sandbox_url : $live_url)."/".$id;
+        $url = ($mode ? $sandbox_url : $live_url)."/".trim($id);
 
-        $username = $sk;
+        $username = trim($sk);
         $password = "";
 
         $ch = curl_init();
