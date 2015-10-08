@@ -1,25 +1,27 @@
 <?php
 
 //Openpay Stores Controller
-class OpenpayController extends MainController {
+class OpenpayController extends MainController
+{
 
     protected $rebilling_periods;
     protected $available_ps;
     protected $decimalZero;
     protected $stripePlans;
 
-    public function __construct($registry) {
+    public function __construct($registry)
+    {
 
         parent::__construct($registry);
 
         $this->file = $this->sanitizePath(DIR_SYSTEM.'../vendor/openpay/Openpay.php');
-		$minTotal = $this->currency->convert(1, 'USD', $this->currency->getCode());
+        $minTotal = $this->currency->convert(1, 'USD', $this->currency->getCode());
 
         if (!defined('MODULE_CODE'))
             define('MODULE_CODE', 'OPENPAY');
         if (!defined('MODULE_NAME'))
             define('MODULE_NAME', 'openpay_stores');
-		if (!defined('MIN_TOTAL'))
+        if (!defined('MIN_TOTAL'))
             define('MIN_TOTAL', $minTotal);
         if (!defined('TRANSACTION_CREATE_CUSTOMER'))
             define('TRANSACTION_CREATE_CUSTOMER', 'Customer creation');
@@ -63,49 +65,55 @@ class OpenpayController extends MainController {
 //    }
 
 
-    protected function getMerchantId() {
+    protected function getMerchantId()
+    {
         if ($this->config->get('openpay_test_mode')) {
             return $this->config->get('openpay_test_merchant_id');
         }
         return $this->config->get('openpay_live_merchant_id');
     }
 
-    public function getMerchantInfo($id, $sk, $mode) {
+    public function getMerchantInfo($id, $sk, $mode)
+    {
 
-		$sandbox_url = "https://sandbox-api.openpay.mx/v1";
-		$live_url = "https://api.openpay.mx/v1";
+        $sandbox_url = "https://sandbox-api.openpay.mx/v1";
+        $live_url = "https://api.openpay.mx/v1";
 
-		$file = $this->file;
-		if (file_exists($file)) {
-			require_once( $file );
-		} else {
-			$result = new stdClass();
-			$result->error = 'Openpay library is missing';
-			return $result;
-		}
+        $file = $this->file;
+        if (file_exists($file)) {
+            require_once( $file );
+        } else {
+            $result = new stdClass();
+            $result->error = 'Openpay library is missing';
+            return $result;
+        }
 
-		$url = ($mode ? $sandbox_url : $live_url)."/".trim($id);
+        $url = ($mode ? $sandbox_url : $live_url)."/".trim($id);
 
-		$username = trim($sk);
-		$password = "";
+        $username = trim($sk);
+        $password = "";
+        $certificates = $this->sanitizePath(DIR_SYSTEM.'../vendor/openpay/data/cacert.pem');
 
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
-		$result = curl_exec($ch);
-		curl_close($ch);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, TRUE);
+        curl_setopt($ch, CURLOPT_CAINFO, $certificates);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
+        $result = curl_exec($ch);
+        curl_close($ch);
 
-		$array = json_decode($result, true);
-		if (array_key_exists('id', $array)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
+        $array = json_decode($result, true);
+        if (array_key_exists('id', $array)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-	protected function isProductionMode() {
+    protected function isProductionMode()
+    {
         if ($this->config->get('openpay_test_mode')) {
             return false;
         } else {
@@ -113,21 +121,24 @@ class OpenpayController extends MainController {
         }
     }
 
-    protected function getSecretApiKey() {
+    protected function getSecretApiKey()
+    {
         if ($this->config->get('openpay_test_mode')) {
             return $this->config->get('openpay_test_secret_key');
         }
         return $this->config->get('openpay_live_secret_key');
     }
 
-    protected function getPublicApiKey() {
+    protected function getPublicApiKey()
+    {
         if ($this->config->get('openpay_test_mode')) {
             return $this->config->get('openpay_test_public_key');
         }
         return $this->config->get('openpay_live_public_key');
     }
 
-    public function getOpenpayCustomer($customer_id) {
+    public function getOpenpayCustomer($customer_id)
+    {
         $result = new stdClass();
         $file = $this->file;
         if (file_exists($file)) {
@@ -147,7 +158,8 @@ class OpenpayController extends MainController {
         return $customer;
     }
 
-    public function createOpenpayCustomer($customer_data) {
+    public function createOpenpayCustomer($customer_data)
+    {
         $result = new stdClass();
 
         $file = $this->file;
@@ -188,7 +200,8 @@ class OpenpayController extends MainController {
         return $result;
     }
 
-    public function getOpenpayCharge($customer, $charge_id) {
+    public function getOpenpayCharge($customer, $charge_id)
+    {
         $result = new stdClass();
 
         $file = $this->file;
@@ -225,7 +238,8 @@ class OpenpayController extends MainController {
         return $result;
     }
 
-    public function createOpenpayCharge($customer, $chargeRequest) {
+    public function createOpenpayCharge($customer, $chargeRequest)
+    {
         $result = new stdClass();
 
         $file = $this->file;
@@ -266,7 +280,8 @@ class OpenpayController extends MainController {
         return $result;
     }
 
-    public function createOpenpayWebhook($webhook_data) {
+    public function createOpenpayWebhook($webhook_data)
+    {
 
         $result = new stdClass();
 
@@ -304,7 +319,8 @@ class OpenpayController extends MainController {
         return $result;
     }
 
-    public function error($e, $backend = false) {
+    public function error($e, $backend = false)
+    {
 
         //6001 el webhook ya existe
 
@@ -398,20 +414,22 @@ class OpenpayController extends MainController {
                 break;
         }
 
-        $error = 'ERROR ' . $e->getErrorCode() . '. ' . $msg;
+        $error = 'ERROR '.$e->getErrorCode().'. '.$msg;
         return $error;
     }
 
-    public function getLongGlobalDateFormat($input) {
+    public function getLongGlobalDateFormat($input)
+    {
         $time = strtotime($input);
 
         $string_month = $this->getLongStringForMonth(date('n', $time));
 
         // Formato "12 de Julio de 2014, a las 6:36 PM"
-        return date('j', $time) . ' de ' . $string_month . ' de ' . date('Y', $time) . ', a las ' . date('g:i A', $time);
+        return date('j', $time).' de '.$string_month.' de '.date('Y', $time).', a las '.date('g:i A', $time);
     }
 
-    public function getLongStringForMonth($month_number) {
+    public function getLongStringForMonth($month_number)
+    {
         $months_array = array(
             1 => 'Enero',
             2 => 'Febrero',

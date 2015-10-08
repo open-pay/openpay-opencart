@@ -1,18 +1,20 @@
 <?php
 
 //Openpay Banks Controller
-class OpenpayBanksController extends MainController {
+class OpenpayBanksController extends MainController
+{
 
     protected $rebilling_periods;
     protected $available_ps;
     protected $decimalZero;
     protected $stripePlans;
 
-    public function __construct($registry) {
+    public function __construct($registry)
+    {
 
         parent::__construct($registry);
         $this->file = $this->sanitizePath(DIR_SYSTEM.'../vendor/openpay/Openpay.php');
-		$minTotal = $this->currency->convert(1, 'USD', $this->currency->getCode());
+        $minTotal = $this->currency->convert(1, 'USD', $this->currency->getCode());
 
         if (!defined('MODULE_CODE'))
             define('MODULE_CODE', 'OPENPAY');
@@ -49,20 +51,22 @@ class OpenpayBanksController extends MainController {
         $this->available_ps = array('pp_express', 'openpay_banks');
     }
 
-    protected function getMerchantId() {
+    protected function getMerchantId()
+    {
         if ($this->config->get('openpay_bank_test_mode')) {
             return $this->config->get('openpay_bank_test_merchant_id');
         }
         return $this->config->get('openpay_bank_live_merchant_id');
     }
 
-    public function getMerchantInfo($id, $sk, $mode){
+    public function getMerchantInfo($id, $sk, $mode)
+    {
 
         $sandbox_url = "https://sandbox-api.openpay.mx/v1";
         $live_url = "https://api.openpay.mx/v1";
 
         $file = $this->file;
-        if (file_exists($file)){
+        if (file_exists($file)) {
             require_once( $file );
         } else {
             $result = new stdClass();
@@ -74,50 +78,56 @@ class OpenpayBanksController extends MainController {
 
         $username = trim($sk);
         $password = "";
+        $certificates = $this->sanitizePath(DIR_SYSTEM.'../vendor/openpay/data/cacert.pem');
 
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL,$url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, TRUE);
+        curl_setopt($ch, CURLOPT_CAINFO, $certificates);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
-        $result=curl_exec ($ch);
-        curl_close ($ch);
+        $result = curl_exec($ch);
+        curl_close($ch);
 
         $array = json_decode($result, true);
         if (array_key_exists('id', $array)) {
             return true;
-        }else{
+        } else {
             return false;
         }
-
     }
 
-    protected function isProductionMode(){
+    protected function isProductionMode()
+    {
         if ($this->config->get('openpay_bank_test_mode')) {
             return false;
-        }  else {
+        } else {
             return true;
         }
     }
 
-    protected function getSecretApiKey() {
+    protected function getSecretApiKey()
+    {
         if ($this->config->get('openpay_bank_test_mode')) {
             return $this->config->get('openpay_bank_test_secret_key');
         }
         return $this->config->get('openpay_bank_live_secret_key');
     }
 
-    protected function getPublicApiKey() {
+    protected function getPublicApiKey()
+    {
         if ($this->config->get('openpay_bank_test_mode')) {
             return $this->config->get('openpay_bank_test_public_key');
         }
         return $this->config->get('openpay_bank_live_public_key');
     }
 
-    public function getOpenpayCustomer($customer_id){
+    public function getOpenpayCustomer($customer_id)
+    {
         $result = new stdClass();
         $file = $this->file;
-        if (file_exists($file)){
+        if (file_exists($file)) {
             require_once( $file );
         } else {
             $result->error = 'Openpay library is missing';
@@ -134,11 +144,12 @@ class OpenpayBanksController extends MainController {
         return $customer;
     }
 
-    public function createOpenpayCustomer($customer_data){
+    public function createOpenpayCustomer($customer_data)
+    {
         $result = new stdClass();
 
         $file = $this->file;
-        if (file_exists($file)){
+        if (file_exists($file)) {
             require_once( $file );
         } else {
             $result->error = 'Openpay library is missing';
@@ -158,7 +169,6 @@ class OpenpayBanksController extends MainController {
             $this->model_payment_openpay_banks->addTransaction(array('type' => TRANSACTION_CREATE_CUSTOMER, 'customer_ref' => $customer->id));
             $this->model_payment_openpay_banks->addCustomer(array('customer_id' => 1, 'openpay_customer_id' => $customer->id));
             return $customer;
-
         } catch (OpenpayApiTransactionError $e) {
             $result->error = $this->error($e);
         } catch (OpenpayApiRequestError $e) {
@@ -174,14 +184,14 @@ class OpenpayBanksController extends MainController {
         }
 
         return $result;
-
     }
 
-    public function getOpenpayCharge($customer, $charge_id){
+    public function getOpenpayCharge($customer, $charge_id)
+    {
         $result = new stdClass();
 
         $file = $this->file;
-        if (file_exists($file)){
+        if (file_exists($file)) {
             require_once( $file );
         } else {
             $result->error = 'Openpay library is missing';
@@ -195,7 +205,7 @@ class OpenpayBanksController extends MainController {
         Openpay::setProductionMode($this->isProductionMode());
 
         try {
-            $charge =$customer->charges->get($charge_id);
+            $charge = $customer->charges->get($charge_id);
             return $charge;
         } catch (OpenpayApiTransactionError $e) {
             $result->error = $this->error($e);
@@ -214,11 +224,12 @@ class OpenpayBanksController extends MainController {
         return $result;
     }
 
-    public function createOpenpayCharge($customer, $chargeRequest) {
+    public function createOpenpayCharge($customer, $chargeRequest)
+    {
         $result = new stdClass();
 
         $file = $this->file;
-        if (file_exists($file)){
+        if (file_exists($file)) {
             require_once( $file );
         } else {
             $result->error = 'Openpay library is missing';
@@ -253,11 +264,10 @@ class OpenpayBanksController extends MainController {
         }
 
         return $result;
-
     }
 
-
-    public function createOpenpayWebhook($webhook_data) {
+    public function createOpenpayWebhook($webhook_data)
+    {
 
         $result = new stdClass();
 
@@ -295,12 +305,12 @@ class OpenpayBanksController extends MainController {
         return $result;
     }
 
-
-    public function error($e, $backend = false) {
+    public function error($e, $backend = false)
+    {
 
         //6001 el webhook ya existe
 
-        switch ($e->getErrorCode()){
+        switch ($e->getErrorCode()) {
 
             //ERRORES GENERALES
             case "1000":
@@ -388,46 +398,41 @@ class OpenpayBanksController extends MainController {
             default: //Demás errores 400
                 $msg = "La petición no pudo ser procesada.";
                 break;
-
         }
 
         $error = 'ERROR '.$e->getErrorCode().'. '.$msg;
         return $error;
-
     }
-
 
     public function getLongGlobalDateFormat($input)
     {
-            $time = strtotime($input);
+        $time = strtotime($input);
 
-            $string_month = $this->getLongStringForMonth(date('n', $time));
+        $string_month = $this->getLongStringForMonth(date('n', $time));
 
-            // Formato "12 de Julio de 2014, a las 6:36 PM"
-            return date('j', $time).' de '.$string_month.' de '.date('Y', $time).', a las '.date('g:i A',$time);
+        // Formato "12 de Julio de 2014, a las 6:36 PM"
+        return date('j', $time).' de '.$string_month.' de '.date('Y', $time).', a las '.date('g:i A', $time);
     }
-
 
     public function getLongStringForMonth($month_number)
     {
-            $months_array = array(
-                    1 => 'Enero',
-                    2 => 'Febrero',
-                    3 => 'Marzo',
-                    4 => 'Abril',
-                    5 => 'Mayo',
-                    6 => 'Junio',
-                    7 => 'Julio',
-                    8 => 'Agosto',
-                    9 => 'Septiembre',
-                    10 => 'Octubre',
-                    11 => 'Noviembre',
-                    12 => 'Diciembre'
-            );
+        $months_array = array(
+            1 => 'Enero',
+            2 => 'Febrero',
+            3 => 'Marzo',
+            4 => 'Abril',
+            5 => 'Mayo',
+            6 => 'Junio',
+            7 => 'Julio',
+            8 => 'Agosto',
+            9 => 'Septiembre',
+            10 => 'Octubre',
+            11 => 'Noviembre',
+            12 => 'Diciembre'
+        );
 
-            return isset($months_array[$month_number]) ? $months_array[$month_number] : '';
+        return isset($months_array[$month_number]) ? $months_array[$month_number] : '';
     }
-
 
 }
 
