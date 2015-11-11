@@ -1,6 +1,6 @@
 <link rel="stylesheet" type="text/css" href="<?php echo $this->registry->get( 'config' )->get('config_ssl'); ?>catalog/view/theme/default/stylesheet/openpay_cards.css">
 
-<form action="" method="POST" id="payment-form" class="form-horizontal">
+<form action="<?php echo $action ?>" method="POST" id="payment-form" class="form-horizontal">
 
     <div class="content" id="payment">
         <div class="row" id="header">
@@ -10,25 +10,26 @@
         </div>
 
         <div class="row mb20 mt20">
-            <div class="col-md-12">
-                <input checked="checked" type="radio" value="credit" id="credit" name="card-type">  <strong>Tarjeta de crédito</strong>
-            </div>
-            <?php for($i=1;$i<=4;$i++): ?>
-                <div class="col-cards">
-                    <img src="<?php echo $this->registry->get( 'config' )->get('config_ssl'); ?>catalog/view/theme/default/image/credit_cards/<?php echo sprintf('%02d', $i) ?>.png" alt="Tarjetas" class="tiendas">
+            <div class="col-md-6">
+                <h3>Tarjetas de crédito</h3>
+                <div class="row">
+                <?php for($i=1;$i<=4;$i++): ?>
+                    <div class="col-md-2">
+                        <img src="<?php echo $this->registry->get( 'config' )->get('config_ssl'); ?>catalog/view/theme/default/image/credit_cards/<?php echo sprintf('%02d', $i) ?>.png" alt="Tarjetas" class="tiendas">
+                    </div>
+                <?php endfor; ?>
                 </div>
-            <?php endfor; ?>
-        </div>
-
-        <div class="row mb20">
-            <div class="col-md-12">
-                <input type="radio" value="debit" id="debit" name="card-type">  <strong>Tarjeta de débito</strong>
             </div>
-            <?php for($i=1;$i<=7;$i++): ?>
-                <div class="col-cards">
-                    <img src="<?php echo $this->registry->get( 'config' )->get('config_ssl'); ?>catalog/view/theme/default/image/debit_cards/<?php echo sprintf('%02d', $i) ?>.png" alt="Tarjetas" class="tiendas">
+            <div class="col-md-6">
+                <h3>Tarjetas de débito</h3>
+                <div class="row">
+                <?php for($i=1;$i<=6;$i++): ?>
+                    <div class="col-md-2">
+                        <img src="<?php echo $this->registry->get( 'config' )->get('config_ssl'); ?>catalog/view/theme/default/image/debit_cards/<?php echo sprintf('%02d', $i) ?>.png" alt="Tarjetas" class="tiendas">
+                    </div>
+                <?php endfor; ?>
                 </div>
-            <?php endfor; ?>
+            </div>
         </div>
 
         <div id="msgBox" role="alert"><i></i><span style="margin-left:10px;"></span></div>
@@ -98,7 +99,6 @@
         });
 
         if( typeof OpenPay == 'undefined' ){
-            console.log('heee');
             var openpay_library = "https://openpay.s3.amazonaws.com/openpay.v1.min.js";
             var openpay_anti_fraud = "https://openpay.s3.amazonaws.com/openpay-data.v1.min.js";
             createScriptTag(openpay_library);
@@ -122,7 +122,6 @@
 
 
         $('#payment-form').submit(function(event) {
-            console.log('SUBMIT');
             /* Prevent the form from submitting with the default action */
             event.preventDefault();
             //return false;

@@ -16,7 +16,7 @@ class ControllerPaymentOpenpayCards extends OpenpayCardsController {
 
         $this->language->load('payment/openpay_cards');
 
-        $data['action'] = $this->url->link('payment/openpay_cards/confirm');
+        $data['action'] = $this->url->link('payment/openpay_cards/confirm', '', 'SSL');
 
         $data['text_credit_card'] = $this->language->get('text_credit_card');
         $data['text_wait'] = $this->language->get('text_wait');
@@ -160,7 +160,7 @@ class ControllerPaymentOpenpayCards extends OpenpayCardsController {
         $json['success'] = $this->url->link('checkout/success', '', 'SSL');
         $this->response->setOutput(json_encode($json));
     }
-
+    
 }
 
 ?>
