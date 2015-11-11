@@ -26,6 +26,10 @@
     width: 100%;
 }
 
+.cvv{
+    max-width: 100%;
+}
+
 .popover-content{
     width: 250px;
 }

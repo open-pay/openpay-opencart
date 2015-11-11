@@ -77,8 +77,8 @@
                 <input id="cc-cvv" type="text" name="cc_cvv2" autocomplete="off" data-openpay-card="cvv2" class="form-control" >
             </div>
             <div class="col-sm-2">
-                <img data-toggle="popover" data-content="<?php echo $help_cvc_back; ?>" src="<?php echo $this->registry->get( 'config' )->get('config_ssl'); ?>catalog/view/theme/default/image/cvc_back.png" alt="Tarjetas" class="tiendas" style="cursor:pointer;">
-                <img data-toggle="popover" data-content="<?php echo $help_cvc_front; ?>" src="<?php echo $this->registry->get( 'config' )->get('config_ssl'); ?>catalog/view/theme/default/image/cvc_front.png" alt="Tarjetas" class="tiendas" style="cursor:pointer;">
+                <img data-toggle="popover" data-content="<?php echo $help_cvc_back; ?>" src="<?php echo $this->registry->get( 'config' )->get('config_ssl'); ?>catalog/view/theme/default/image/cvc_back.png" alt="Tarjetas" class="cvv" style="cursor:pointer;">
+                <img data-toggle="popover" data-content="<?php echo $help_cvc_front; ?>" src="<?php echo $this->registry->get( 'config' )->get('config_ssl'); ?>catalog/view/theme/default/image/cvc_front.png" alt="Tarjetas" class="cvv" style="cursor:pointer;">
             </div>
         </div>
         <div class="form-group">
