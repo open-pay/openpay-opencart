@@ -8,14 +8,14 @@ class MainModel extends Model {
             return false;
 
         if (empty($this->request->get['route']) || empty($this->request->get['order_id'])) {
-            $this->debugLog->write('Permission was not checked - insufficient data');
+            $this->log->write('Permission was not checked - insufficient data');
             return false;
         }
 
         $route = explode('/', $this->request->get['route']);
 
         if (empty($route[0]) || empty($route[1])) {
-            $this->debugLog->write('Permission was not checked - invalid route format');
+            $this->log->write('Permission was not checked - invalid route format');
             return false;
         }
 
@@ -32,14 +32,14 @@ class MainModel extends Model {
             return false;
 
         if (empty($this->request->get['route']) || empty($this->request->get['order_id'])) {
-            $this->debugLog->write('Permission was not checked - insufficient data');
+            $this->log->write('Permission was not checked - insufficient data');
             return false;
         }
 
         $route = explode('/', $this->request->get['route']);
 
         if (empty($route[0]) || empty($route[1])) {
-            $this->debugLog->write('Permission was not checked - invalid route format');
+            $this->log->write('Permission was not checked - invalid route format');
             return false;
         }
 

@@ -3,11 +3,9 @@
 //Openpay Stores Controller
 class OpenpayController extends MainController
 {
-
-    protected $rebilling_periods;
+    
     protected $available_ps;
     protected $decimalZero;
-    protected $stripePlans;
 
     public function __construct($registry)
     {
@@ -15,7 +13,7 @@ class OpenpayController extends MainController
         parent::__construct($registry);
 
         $this->file = $this->sanitizePath(DIR_SYSTEM.'../vendor/openpay/Openpay.php');
-        $minTotal = $this->currency->convert(1, 'USD', $this->currency->getCode());
+        $minTotal = 1;
 
         if (!defined('MODULE_CODE'))
             define('MODULE_CODE', 'OPENPAY');
@@ -47,22 +45,20 @@ class OpenpayController extends MainController
         if (!defined('PRO_MODE'))
             define('PRO_MODE', false);
 
-        $this->decimalZero = array('BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'VND', 'VUV', 'XAF', 'XOF', 'XPF',);
-
-        $this->available_ps = array('pp_express', 'openpay_stores');
+        $this->available_ps = array('openpay_stores');
     }
 
-//    protected function currencyToMin($value, $code) {
-//        if (in_array($code, $this->decimalZero))
-//            return $value;
-//        return round($value * 100);
-//    }
-//
-//    protected function minToCurrency($value, $code) {
-//        if (in_array($code, $this->decimalZero))
-//            return $value;
-//        return $value / 100;
-//    }
+    protected function currencyToMin($value, $code) {
+        if (in_array($code, $this->decimalZero))
+            return $value;
+        return round($value * 100);
+    }
+
+    protected function minToCurrency($value, $code) {
+        if (in_array($code, $this->decimalZero))
+            return $value;
+        return $value / 100;
+    }
 
 
     protected function getMerchantId()
@@ -158,7 +154,7 @@ class OpenpayController extends MainController
         return $customer;
     }
 
-    public function createOpenpayCustomer($customer_data)
+    public function createOpenpayCustomer($customer_data, $customer_id)
     {
         $result = new stdClass();
 
@@ -179,9 +175,9 @@ class OpenpayController extends MainController
         try {
             $customer = $openpay->customers->add($customer_data);
 
-            $this->load->model('payment/openpay_stores');
-            $this->model_payment_openpay_stores->addTransaction(array('type' => TRANSACTION_CREATE_CUSTOMER, 'customer_ref' => $customer->id));
-            $this->model_payment_openpay_stores->addCustomer(array('customer_id' => 1, 'openpay_customer_id' => $customer->id));
+            $this->load->model('extension/payment/openpay_stores');
+            $this->model_extension_payment_openpay_stores->addTransaction(array('type' => TRANSACTION_CREATE_CUSTOMER, 'customer_ref' => $customer->id));
+            $this->model_extension_payment_openpay_stores->addCustomer(array('customer_id' => $customer_id, 'openpay_customer_id' => $customer->id));
             return $customer;
         } catch (OpenpayApiTransactionError $e) {
             $result->error = $this->error($e);
@@ -259,8 +255,8 @@ class OpenpayController extends MainController
         try {
             $charge = $customer->charges->create($chargeRequest);
 
-            $this->load->model('payment/openpay_stores');
-            $this->model_payment_openpay_stores->addTransaction(array('type' => TRANSACTION_CREATE_CHARGE, 'charge_ref' => $charge->id, 'amount' => $charge->amount, 'status' => $charge->status));
+            $this->load->model('extension/payment/openpay_stores');
+            $this->model_extension_payment_openpay_stores->addTransaction(array('type' => TRANSACTION_CREATE_CHARGE, 'charge_ref' => $charge->id, 'amount' => $charge->amount, 'status' => $charge->status));
 
             return $charge;
         } catch (OpenpayApiTransactionError $e) {

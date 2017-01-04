@@ -1,6 +1,6 @@
 ![Openpay OpenCart](http://www.openpay.mx/img/github/opencart.jpg)
 
-Opencart plugin for Openpay payments methods
+Plugins de Openpay para OpenCart v2.3 
 
 ## Instalación
 

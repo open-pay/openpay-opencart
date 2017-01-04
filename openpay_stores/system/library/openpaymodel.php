@@ -4,11 +4,11 @@ class OpenpayModel extends MainModel {
 
     public function addOrder($data) {
         if (empty($data['order_id'])) {
-            $this->debugLod->throwError(__METHOD__ . ' : order ID missing');
+            $this->debugLod->write(__METHOD__ . ' : order ID missing');
             return false;
         }
         if (empty($data['charge_ref'])) {
-            $this->debugLog->throwError(__METHOD__ . ' : charge refference missing');
+            $this->log->write(__METHOD__ . ' : charge refference missing');
             return false;
         }
 
@@ -17,35 +17,35 @@ class OpenpayModel extends MainModel {
         $data['total'] = isset($data['total']) ? $data['total'] : '';
         $data['currency_code'] = isset($data['currency_code']) ? $data['currency_code'] : '';
 
-        $this->debugLog->write(__METHOD__ . ' : Order data to record', $data);
+        $this->log->write(__METHOD__ . ' : Order data to record', $data);
         $this->db->query("INSERT INTO " . DB_PREFIX . "openpay_order SET order_id = " . (int) $data['order_id'] . ", charge_ref = '" . $this->db->escape($data['charge_ref']) . "', date_added = NOW(), capture_status = " . (int) $data['capture_status'] . ", description  = '" . $this->db->escape($data['description']) . "', total = '" . (float) $data['total'] . "', currency_code = '" . $this->db->escape($data['currency_code']) . "'");
         if ($this->db->countAffected()) {
-            $this->debugLog->write("Order #{$this->db->getLastId()} added to DB");
+            $this->log->write("Order #{$this->db->getLastId()} added to DB");
             return $this->db->getLastId();
         }
-        $this->debugLog->throwError(__METHOD__ . ' : Error while adding order to DB');
+        $this->log->write(__METHOD__ . ' : Error while adding order to DB');
         return false;
     }
 
     public function getOrder($order_id) {
-        $this->debugLog->write(__METHOD__ . "Fetching order with order_id #$order_id");
+        $this->log->write(__METHOD__ . "Fetching order with order_id #$order_id");
         $order = $this->db->query("SELECT * FROM " . DB_PREFIX . "openpay_order WHERE order_id = '" . (int) $order_id . "'");
         if ($order->num_rows) {
-            $this->debugLog->write("Order #{$order_id} fetched", $order->row);
+            $this->log->write("Order #{$order_id} fetched", $order->row);
             return $order->row;
         }
-        $this->debugLog->throwError("Order with order_id #'$order_id' not found");
+        $this->log->write("Order with order_id #'$order_id' not found");
         return null;
     }
 
     public function getOrderByCharge($charge_ref) {
-        $this->debugLog->write(__METHOD__ . "Fetching order with charge referense #$charge_ref");
+        $this->log->write(__METHOD__ . "Fetching order with charge referense #$charge_ref");
         $order = $this->db->query("SELECT * FROM " . DB_PREFIX . "openpay_order WHERE charge_ref = '" . $this->db->escape($charge_ref) . "'");
         if ($order->num_rows) {
-            $this->debugLog->write("Order for charge #{$charge_ref} is fetched", $order->row);
+            $this->log->write("Order for charge #{$charge_ref} is fetched", $order->row);
             return $order->row;
         }
-        $this->debugLog->throwError("Order with charge referense #'$charge_ref' not found");
+        $this->log->write("Order with charge referense #'$charge_ref' not found");
         return null;
     }
 
@@ -66,13 +66,13 @@ class OpenpayModel extends MainModel {
             'event_ref' => isset($data['refund_ref']) ? $data['refund_ref'] : '',
             'status' => isset($data['status']) ? $data['status'] : '',
         );
-        $this->debugLog->write("Record transaction", $info);
+        $this->log->write("Record transaction", $info);
         $this->db->query("INSERT INTO " . DB_PREFIX . "openpay_transaction SET transaction_ref = '" . $this->db->escape($info['transaction_ref']) . "', amount = " . (float) $info['amount'] . ", description = '" . $this->db->escape($info['description']) . "', initiator = '" . $info['initiator'] . "', customer_ref = '" . $this->db->escape($info['customer_ref']) . "', source_ref = '" . $this->db->escape($info['source_ref']) . "', plan_ref = '" . $this->db->escape($info['plan_ref']) . "', subscription_ref = '" . $this->db->escape($info['subscription_ref']) . "', charge_ref = '" . $this->db->escape($info['charge_ref']) . "', refund_ref = '" . $this->db->escape($info['refund_ref']) . "', event_ref = '" . $this->db->escape($info['event_ref']) . "', `type` = '" . $data['type'] . "', `status` = '" . $this->db->escape($info['status']) . "', invoice_ref = '" . $this->db->escape($info['invoice_ref']) . "'");
         if ($this->db->countAffected()) {
-            $this->debugLog->write("Transaction #{$this->db->getLastId()} added to DB");
+            $this->log->write("Transaction #{$this->db->getLastId()} added to DB");
             return $this->db->getLastId();
         }
-        $this->debugLog->throwError("Error while adding transaction");
+        $this->log->write("Error while adding transaction");
         return false;
     }
 
@@ -102,11 +102,11 @@ class OpenpayModel extends MainModel {
         if (!empty($qa))
             $q .= ' WHERE ' . implode(' AND ', $qa);
 
-        $this->debugLog->write("Quering transactions with query $q");
+        $this->log->write("Quering transactions with query $q");
 
         $txn = $this->db->query($q);
 
-        $this->debugLog->write('Fetched ' . $txn->num_rows . ' transaction(s)');
+        $this->log->write('Fetched ' . $txn->num_rows . ' transaction(s)');
 
         if ($txn->num_rows)
             return $txn->rows;
@@ -118,23 +118,23 @@ class OpenpayModel extends MainModel {
             'customer_id' => isset($data['customer_id']) ? $data['customer_id'] : '',
             'openpay_customer_id' => isset($data['openpay_customer_id']) ? $data['openpay_customer_id'] : ''
         );
-        $this->debugLog->write("Record customer", $info);
+        $this->log->write("Record customer", $info);
         $this->db->query("INSERT INTO " . DB_PREFIX . "openpay_customer SET customer_id = '" . $this->db->escape($info['customer_id']) . "', openpay_customer_id = '" . $info['openpay_customer_id'] . "', date_added = NOW()");
         if ($this->db->countAffected()) {
-            $this->debugLog->write("Customer #{$this->db->getLastId()} added to DB");
+            $this->log->write("Customer #{$this->db->getLastId()} added to DB");
             return $this->db->getLastId();
         }
-        $this->debugLog->throwError("Error while adding transaction");
+        $this->log->write("Error while adding transaction");
         return false;
     }
     
     public function getCustomer($customer_id) {
         $customer = $this->db->query("SELECT * FROM " . DB_PREFIX . "openpay_customer WHERE customer_id = '" . $this->db->escape($customer_id) . "'");
         if ($customer->num_rows) {
-            $this->debugLog->write("Customer $customer_id exists in DB");
+            $this->log->write("Customer $customer_id exists in DB");
             return $customer->row;
         }
-        $this->debugLog->write("Customer $customer_id do not exists in DB");
+        $this->log->write("Customer $customer_id do not exists in DB");
         return false;
     }
     

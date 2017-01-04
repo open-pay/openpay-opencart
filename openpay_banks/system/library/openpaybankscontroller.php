@@ -14,7 +14,7 @@ class OpenpayBanksController extends MainController
 
         parent::__construct($registry);
         $this->file = $this->sanitizePath(DIR_SYSTEM.'../vendor/openpay/Openpay.php');
-        $minTotal = $this->currency->convert(1, 'USD', $this->currency->getCode());
+        $minTotal = 1;
 
         if (!defined('MODULE_CODE'))
             define('MODULE_CODE', 'OPENPAY');
@@ -144,7 +144,7 @@ class OpenpayBanksController extends MainController
         return $customer;
     }
 
-    public function createOpenpayCustomer($customer_data)
+    public function createOpenpayCustomer($customer_data, $customer_id)
     {
         $result = new stdClass();
 
@@ -165,9 +165,9 @@ class OpenpayBanksController extends MainController
         try {
             $customer = $openpay->customers->add($customer_data);
 
-            $this->load->model('payment/openpay_banks');
-            $this->model_payment_openpay_banks->addTransaction(array('type' => TRANSACTION_CREATE_CUSTOMER, 'customer_ref' => $customer->id));
-            $this->model_payment_openpay_banks->addCustomer(array('customer_id' => 1, 'openpay_customer_id' => $customer->id));
+            $this->load->model('extension/payment/openpay_banks');
+            $this->model_extension_payment_openpay_banks->addTransaction(array('type' => TRANSACTION_CREATE_CUSTOMER, 'customer_ref' => $customer->id));
+            $this->model_extension_payment_openpay_banks->addCustomer(array('customer_id' => $customer_id, 'openpay_customer_id' => $customer->id));
             return $customer;
         } catch (OpenpayApiTransactionError $e) {
             $result->error = $this->error($e);
@@ -245,8 +245,8 @@ class OpenpayBanksController extends MainController
         try {
             $charge = $customer->charges->create($chargeRequest);
 
-            $this->load->model('payment/openpay_banks');
-            $this->model_payment_openpay_banks->addTransaction(array('type' => TRANSACTION_CREATE_CHARGE, 'charge_ref' => $charge->id, 'amount' => $charge->amount, 'status' => $charge->status));
+            $this->load->model('extension/payment/openpay_banks');
+            $this->model_extension_payment_openpay_banks->addTransaction(array('type' => TRANSACTION_CREATE_CHARGE, 'charge_ref' => $charge->id, 'amount' => $charge->amount, 'status' => $charge->status));
 
             return $charge;
         } catch (OpenpayApiTransactionError $e) {
