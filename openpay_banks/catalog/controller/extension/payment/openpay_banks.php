@@ -32,9 +32,6 @@ class ControllerExtensionPaymentOpenpayBanks extends OpenpayBanksController {
 
     public function confirm() {
         
-        //$this->document->addScript('catalog/view/javascript/jquery/jquery-2.1.1.min.js');
-        //$this->document->addStyle('catalog/view/javascript/bootstrap/css/bootstrap.min.css');
-
         if (array_key_exists('payment_method', $this->session->data) && $this->session->data['payment_method']['code'] == 'openpay_banks') {
 
 
@@ -137,16 +134,8 @@ class ControllerExtensionPaymentOpenpayBanks extends OpenpayBanksController {
 
             }
 
-            $data['clabe'] = $charge->payment_method->clabe;
-            $data['name'] = $charge->payment_method->name;
-            $data['due_date'] = $this->getLongGlobalDateFormat($charge->due_date);
-            $data['creation_date'] = $this->getLongGlobalDateFormat($charge->creation_date);
-            $data['currency'] = $charge->currency;
-            $data['amount'] = number_format($charge->amount, 2);
-            $data['order_id'] = $charge->order_id;
-            $data['store_email'] = $this->config->get('config_email');
-            $data['store_name'] = $this->config->get('config_name');
-            $data['logo'] = $this->config->get('config_ssl') . 'image/' . $this->config->get('config_logo');
+            $pdf_base_url = $this->isProductionMode() ? 'https://dashboard.openpay.mx/spei-pdf' : 'https://sandbox-dashboard.openpay.mx/spei-pdf';
+            $data['pdf'] = $pdf_base_url.'/'.$this->getMerchantId().'/'.$charge->id;
 
             $this->load->language('checkout/success');
 

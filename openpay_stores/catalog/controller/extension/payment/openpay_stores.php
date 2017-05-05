@@ -32,9 +32,6 @@ class ControllerExtensionPaymentOpenpayStores extends OpenpayController {
 
     public function confirm() {
 
-        $this->document->addScript('catalog/view/javascript/jquery/jquery-2.1.1.min.js');
-        $this->document->addStyle('catalog/view/javascript/bootstrap/css/bootstrap.min.css');
-
         if (array_key_exists('payment_method', $this->session->data) && $this->session->data['payment_method']['code'] == 'openpay_stores') {
 
 
@@ -137,15 +134,8 @@ class ControllerExtensionPaymentOpenpayStores extends OpenpayController {
 
             }
 
-            $data['barcode_url'] = $charge->payment_method->barcode_url;
-            $data['reference'] = $charge->payment_method->reference;
-            $data['due_date'] = $this->getLongGlobalDateFormat($charge->due_date);
-            $data['creation_date'] = $this->getLongGlobalDateFormat($charge->creation_date);
-            $data['currency'] = $charge->currency;
-            $data['amount'] = number_format($charge->amount, 2);
-            $data['order_id'] = $charge->order_id;
-            $data['email'] = $this->customer->getEmail();
-            $data['logo'] = $this->config->get('config_ssl') . 'image/' . $this->config->get('config_logo');
+            $pdf_base_url = $this->isProductionMode() ? 'https://dashboard.openpay.mx/paynet-pdf' : 'https://sandbox-dashboard.openpay.mx/paynet-pdf';
+            $data['pdf'] = $pdf_base_url.'/'.$this->getMerchantId().'/'.$charge->payment_method->reference;
 
             $this->load->language('checkout/success');
 
