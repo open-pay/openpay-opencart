@@ -3,11 +3,10 @@
 //Openpay Cards Controller
 class OpenpayCardsController extends MainController
 {
-    
-    protected $available_ps;      
 
-    public function __construct($registry)
-    {
+    protected $available_ps;
+
+    public function __construct($registry) {
 
         parent::__construct($registry);
 
@@ -43,21 +42,19 @@ class OpenpayCardsController extends MainController
 
         if (!defined('PRO_MODE'))
             define('PRO_MODE', false);
-        
+
 
         $this->available_ps = array('openpay_cards');
     }
 
-    protected function getMerchantId()
-    {
+    protected function getMerchantId() {
         if ($this->config->get('openpay_card_test_mode')) {
             return $this->config->get('openpay_card_test_merchant_id');
         }
         return $this->config->get('openpay_card_live_merchant_id');
     }
 
-    public function getMerchantInfo($id, $sk, $mode)
-    {
+    public function getMerchantInfo($id, $sk, $mode) {
 
         $sandbox_url = "https://sandbox-api.openpay.mx/v1";
         $live_url = "https://api.openpay.mx/v1";
@@ -95,8 +92,7 @@ class OpenpayCardsController extends MainController
         }
     }
 
-    protected function isProductionMode()
-    {
+    protected function isProductionMode() {
         if ($this->config->get('openpay_card_test_mode')) {
             return false;
         } else {
@@ -104,8 +100,7 @@ class OpenpayCardsController extends MainController
         }
     }
 
-    protected function isTestMode()
-    {
+    protected function isTestMode() {
         if ($this->config->get('openpay_card_test_mode')) {
             return true;
         } else {
@@ -113,24 +108,21 @@ class OpenpayCardsController extends MainController
         }
     }
 
-    protected function getSecretApiKey()
-    {
+    protected function getSecretApiKey() {
         if ($this->config->get('openpay_card_test_mode')) {
             return $this->config->get('openpay_card_test_secret_key');
         }
         return $this->config->get('openpay_card_live_secret_key');
     }
 
-    protected function getPublicApiKey()
-    {
+    protected function getPublicApiKey() {
         if ($this->config->get('openpay_card_test_mode')) {
             return $this->config->get('openpay_card_test_public_key');
         }
         return $this->config->get('openpay_card_live_public_key');
     }
 
-    public function getOpenpayCustomer($customer_id)
-    {
+    public function getOpenpayCustomer($customer_id) {
         $result = new stdClass();
         $file = $this->file;
         if (file_exists($file)) {
@@ -150,8 +142,7 @@ class OpenpayCardsController extends MainController
         return $customer;
     }
 
-    public function createOpenpayCustomer($customer_data, $customer_id)
-    {
+    public function createOpenpayCustomer($customer_data, $oc_customer_id) {
         $result = new stdClass();
 
         $file = $this->file;
@@ -173,7 +164,7 @@ class OpenpayCardsController extends MainController
 
             $this->load->model('extension/payment/openpay_cards');
             $this->model_extension_payment_openpay_cards->addTransaction(array('type' => TRANSACTION_CREATE_CUSTOMER, 'customer_ref' => $customer->id));
-            $this->model_extension_payment_openpay_cards->addCustomer(array('customer_id' => $customer_id, 'openpay_customer_id' => $customer->id));
+            $this->model_extension_payment_openpay_cards->addCustomer(array('customer_id' => $oc_customer_id, 'openpay_customer_id' => $customer->id));
             return $customer;
         } catch (OpenpayApiTransactionError $e) {
             $result->error = $this->error($e);
@@ -192,8 +183,7 @@ class OpenpayCardsController extends MainController
         return $result;
     }
 
-    public function getOpenpayCharge($customer, $charge_id)
-    {
+    public function getOpenpayCharge($customer, $charge_id) {
         $result = new stdClass();
 
         $file = $this->file;
@@ -230,8 +220,7 @@ class OpenpayCardsController extends MainController
         return $result;
     }
 
-    public function createOpenpayCharge($customer, $chargeRequest)
-    {
+    public function createOpenpayCharge($customer, $chargeRequest) {
         $result = new stdClass();
 
         $file = $this->file;
@@ -272,8 +261,7 @@ class OpenpayCardsController extends MainController
         return $result;
     }
 
-    public function createOpenpayWebhook($webhook_data)
-    {
+    public function createOpenpayWebhook($webhook_data) {
 
         $result = new stdClass();
 
@@ -311,8 +299,7 @@ class OpenpayCardsController extends MainController
         return $result;
     }
 
-    public function error($e)
-    {
+    public function error($e) {
 
         //6001 el webhook ya existe
 
@@ -410,8 +397,7 @@ class OpenpayCardsController extends MainController
         return $error;
     }
 
-    public function getLongGlobalDateFormat($input)
-    {
+    public function getLongGlobalDateFormat($input) {
         $time = strtotime($input);
 
         $string_month = $this->getLongStringForMonth(date('n', $time));
@@ -420,8 +406,7 @@ class OpenpayCardsController extends MainController
         return date('j', $time).' de '.$string_month.' de '.date('Y', $time).', a las '.date('g:i A', $time);
     }
 
-    public function getLongStringForMonth($month_number)
-    {
+    public function getLongStringForMonth($month_number) {
         $months_array = array(
             1 => 'Enero',
             2 => 'Febrero',
@@ -438,6 +423,14 @@ class OpenpayCardsController extends MainController
         );
 
         return isset($months_array[$month_number]) ? $months_array[$month_number] : '';
+    }
+
+    protected function getMonthsInterestFree() {
+        if ($this->config->get('openpay_card_interest_free')) {
+            return $this->config->get('openpay_card_interest_free');
+        } else {
+            return array();
+        }
     }
 
 }

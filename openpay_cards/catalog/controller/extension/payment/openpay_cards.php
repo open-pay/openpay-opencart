@@ -56,6 +56,11 @@ class ControllerExtensionPaymentOpenpayCards extends OpenpayCardsController {
                     'value' => $now->format( 'y' ),
             );
         }
+        
+        $data['months_interest_free'] = $this->getMonthsInterestFree();
+        
+        $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
+        $data['total'] = $order_info['total'];
 
         return $this->load->view('extension/payment/openpay_cards', $data);        
     }
@@ -129,6 +134,11 @@ class ControllerExtensionPaymentOpenpayCards extends OpenpayCardsController {
             'description' => 'Order ID# ' . $this->session->data['order_id'],
             'order_id' => $this->session->data['order_id']
         );
+        
+        if (isset($this->request->post['interest_free']) && $this->request->post['interest_free'] > 1) {
+            $charge_request['payment_plan'] = array('payments' => (int) $this->request->post['interest_free']);
+        }        
+        
         $charge = $this->createOpenpayCharge($customer, $charge_request);
 
 

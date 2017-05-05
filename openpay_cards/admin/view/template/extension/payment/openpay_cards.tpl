@@ -196,6 +196,16 @@
                                     <input type="text" id="input-sort-order" class="form-control" name="openpay_cards_sort_order" value="<?php echo $openpay_cards_sort_order; ?>" >
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="radio-test-mode">Months interest-free</label>
+                                <div class="col-sm-10">
+                                    <?php foreach ($months_interest_free as $key => $month): ?>
+                                        <label class="checkbox-inline">
+                                            <input type="checkbox" name="openpay_card_interest_free[]" value="<?php echo $key ?>" <?php echo in_array($key, $openpay_card_interest_free) ? 'checked="checked"' : '' ?>> <?php echo $month ?>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
                         </div>
                         <div class="tab-pane" id="tab-status">
                             <div class="form-group">

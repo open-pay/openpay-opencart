@@ -81,6 +81,25 @@
                 <img data-toggle="popover" data-content="<?php echo $help_cvc_front; ?>" src="/catalog/view/theme/default/image/cvc_front.png" alt="Tarjetas" class="cvv" style="cursor:pointer;">
             </div>
         </div>
+        <?php if(count($months_interest_free)>0): ?>
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="cc-cvv">
+                    Meses sin intereses
+                </label>
+                <div class="col-sm-2">
+                    <select id="interest-free" name="interest_free" class="form-control">
+                        <option value="">Pago de contado</option>
+                        <?php foreach ($months_interest_free as $month) : ?>
+                            <option value="<?php echo $month ?>"><?php echo $month; ?> meses</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-sm-2 hidden" id="total-monthly-payment" >
+                    Pago mensual
+                    <p class="openpay-total">$<span id="monthly-payment"></span> MXN</p>                    
+                </div>
+            </div>
+        <?php endif; ?>
         <div class="form-group">
             <div class="col-sm-4 col-sm-offset-2">
                 <button type="submit" class="btn btn-primary" id="button-confirm" data-loading-text="Processing"><?php echo $button_confirm; ?></button>
@@ -97,6 +116,23 @@
         $('[data-toggle="popover"]').popover({
             trigger: 'hover',
             'placement': 'top'
+        });
+        
+        var total = <?php echo $total ?>;          
+        $("#interest-free").change(function() {      
+            var monthly_payment = 0;
+            var months = parseInt($(this).val());     
+
+            if (months > 1) {
+                $("#total-monthly-payment").removeClass('hidden');
+            } else {
+                $("#total-monthly-payment").addClass('hidden');
+            }
+
+            monthly_payment = total/months;
+            monthly_payment = monthly_payment.toFixed(2);
+
+            $("#monthly-payment").text(monthly_payment);
         });
 
         if( typeof OpenPay == 'undefined' ){

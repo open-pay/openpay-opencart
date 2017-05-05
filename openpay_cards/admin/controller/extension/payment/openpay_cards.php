@@ -24,7 +24,7 @@ class ControllerExtensionPaymentOpenpayCards extends OpenpayCardsController {
 
             $setting = $this->model_setting_setting->getSetting('openpay');
             $this->merge($setting, $this->request->post, true);
-
+            
             $this->model_setting_setting->editSetting('openpay', $setting);
             $this->model_setting_setting->editSetting('openpay_cards', $setting);
 
@@ -97,7 +97,7 @@ class ControllerExtensionPaymentOpenpayCards extends OpenpayCardsController {
 
         $data['breadcrumbs'][] = array(
             'text' => $this->language->get('text_payment'),
-            'href' => $this->url->link($this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=payment', true)),
+            'href' => $this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL'),
         );
 
         $data['breadcrumbs'][] = array(
@@ -117,7 +117,7 @@ class ControllerExtensionPaymentOpenpayCards extends OpenpayCardsController {
         $data['openpay_card_test_mode'] = $this->fillSetting('openpay_card_test_mode');
         $data['openpay_card_new_status_id'] = $this->fillSetting('openpay_card_new_status_id');
         $data['openpay_card_title'] = $this->fillSetting('openpay_card_title', $this->language->get('text_title'));
-
+        
         $this->load->model('localisation/order_status');
 
         $data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
@@ -133,7 +133,21 @@ class ControllerExtensionPaymentOpenpayCards extends OpenpayCardsController {
         $data['openpay_cards_sort_order'] = $this->fillSetting('openpay_cards_sort_order');
         $data['openpay_charge'] = $this->fillSetting('openpay_charge', 1);
         $data['openpay_cards_geo_zone_id'] = $this->fillSetting('openpay_cards_geo_zone_id');
-
+        
+        /*
+         * MESES SIN INTERESES
+         */
+        $data['months_interest_free'] = array('3' => '3 meses', '6' => '6 meses', '9' => '9 meses', '12' => '12 meses', '18' => '18 meses'); // Se definen los meses disponibles 
+        
+        if (isset($this->request->post['openpay_card_interest_free'])) {
+            $data['openpay_card_interest_free'] = $this->request->post['openpay_card_interest_free'];        
+        } elseif ($this->config->get('openpay_card_interest_free')) {
+            $data['openpay_card_interest_free'] = $this->config->get('openpay_card_interest_free');        
+        } else {
+            $data['openpay_card_interest_free'] = array();
+        }        
+        
+        
         $data['header'] = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
         $data['footer'] = $this->load->controller('common/footer');
