@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @version Opencart v 2.0.1.1
+ * @version Opencart v3.0.2.0
  */
 class ModelExtensionPaymentOpenpayCards extends OpenpayModel {
 
@@ -9,11 +9,11 @@ class ModelExtensionPaymentOpenpayCards extends OpenpayModel {
 
         $this->language->load('extension/payment/openpay_cards');
 
-        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "zone_to_geo_zone WHERE geo_zone_id = '" . (int) $this->config->get('openpay_cards_geo_zone_id') . "' AND country_id = '" . (int) $address['country_id'] . "' AND (zone_id = '" . (int) $address['zone_id'] . "' OR zone_id = '0')");
+        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "zone_to_geo_zone WHERE geo_zone_id = '" . (int) $this->config->get('payment_openpay_cards_geo_zone_id') . "' AND country_id = '" . (int) $address['country_id'] . "' AND (zone_id = '" . (int) $address['zone_id'] . "' OR zone_id = '0')");
 
-        if ($this->config->get('openpay_card_total') > 0 && $this->config->get('openpay_card_total') > $total) {
+        if ($this->config->get('payment_openpay_cards_total') > 0 && $this->config->get('payment_openpay_cards_total') > $total) {
             $status = false;
-        } elseif (!$this->config->get('openpay_cards_geo_zone_id')) {
+        } elseif (!$this->config->get('payment_openpay_cards_geo_zone_id')) {
             $status = true;
         } elseif ($query->num_rows) {
             $status = true;
@@ -26,21 +26,13 @@ class ModelExtensionPaymentOpenpayCards extends OpenpayModel {
         if ($status) {
             $method_data = array(
                 'code' => 'openpay_cards',
-                'title' => $this->config->has('openpay_card_title') ? $this->config->get('openpay_card_title') : $this->language->get('text_title'),
-                'sort_order' => $this->config->get('openpay_cards_sort_order'),
+                'title' => $this->config->has('payment_openpay_cards_title') ? $this->config->get('payment_openpay_cards_title') : $this->language->get('text_title'),
+                'sort_order' => $this->config->get('payment_openpay_cards_sort_order'),
                 'terms' => '',
             );
         }
 
         return $method_data;
-    }
-
-    public function recurringPayments() {
-
-        if (defined('PRO_MODE')) {
-            return PRO_MODE;
-        }
-        return false;
     }
 
 }
