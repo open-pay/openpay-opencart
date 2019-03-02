@@ -91,7 +91,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
                     'currency' => 'mxn',
                     'amount' => $amount,
                     'description' => 'Order ID# '.$this->session->data['order_id'],
-                    'order_id' => $this->session->data['order_id'],
+                    //'order_id' => $this->session->data['order_id'],
                     'due_date' => $due_date
                 );
                 $charge = $this->createOpenpayCharge($customer, $charge_request);
@@ -114,6 +114,8 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
                         'total' => $charge->amount,
                         'currency_code' => $charge->currency,
                     ));
+                    
+                    $this->sendReceipt($order_info, $this->getPdfUrl($charge));
 
                     $this->log->write("Order #".$charge->order_id." confirmed");
                 }
@@ -121,17 +123,24 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
                 $this->clearCart();
             }
 
-            $pdf_base_url = $this->isTestMode() ? 'https://sandbox-dashboard.openpay.mx/paynet-pdf': 'https://dashboard.openpay.mx/paynet-pdf';
-            $data['pdf'] = $pdf_base_url.'/'.$this->getMerchantId().'/'.$charge->payment_method->reference;
+            
+            $data['pdf'] = $this->getPdfUrl($charge);
 
             $this->load->language('checkout/success');
 
+            $data['show_map'] = $this->config->get('payment_openpay_stores_show_map') == '1' ? true : false;
+            $data['postcode'] = isset($order_info['shipping_postcode']) ? $order_info['shipping_postcode'] : $order_info['payment_postcode'];
             $data['continue'] = $this->url->link('common/home');
 
             $this->response->setOutput($this->load->view('extension/payment/openpay_receipt', $data));
         } else {
             header('Location: '.$this->url->link('common/home', '', true));
         }
+    }
+    
+    private function getPdfUrl($charge) {
+        $pdf_base_url = $this->isTestMode() ? 'https://sandbox-dashboard.openpay.mx/paynet-pdf': 'https://dashboard.openpay.mx/paynet-pdf';
+        return $pdf_base_url.'/'.$this->getMerchantId().'/'.$charge->payment_method->reference;
     }
 
     public function clearCart() {
@@ -176,10 +185,10 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
 
     public function webhook() {
         $objeto = file_get_contents('php://input');
-        $json = json_decode($objeto);
+        $this->log->write('#webhook => '.$objeto);
         $this->log->write($objeto);
 
-        if (!count($json) > 0) {
+        if(!$json) {
             return true;
         }
         
@@ -188,11 +197,11 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
             return;
         }
 
-        if ($json->type == 'charge.succeeded' && $json->transaction->method == 'store') {
+        if ($json->type == 'charge.succeeded' && $charge->method == 'bank_account') {
             $comment = 'Pago recibido.';
             $notify = true;
             $this->load->model('checkout/order');
-            $this->model_checkout_order->addOrderHistory($json->transaction->order_id, $this->config->get('payment_openpay_stores_order_status_id'), $comment, $notify);
+            $this->model_checkout_order->addOrderHistory($charge->order_id, $this->config->get('payment_openpay_stores_order_status_id'), $comment, $notify);
         }
     }
     
@@ -300,7 +309,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
             $charge = $this->openpayRequest('customers/'.$customer->id.'/charges', 'POST', $charge_request);
 
             $this->load->model('extension/payment/openpay_cards');
-            $this->model_extension_payment_openpay_stores->addTransaction(array('type' => 'Charge creation', 'charge_ref' => $charge->id, 'amount' => $charge->amount, 'status' => $charge->status));
+            $this->model_extension_payment_openpay_stores->addTransaction(array('type' => 'Charge creation', 'customer_ref' => $customer->id, 'charge_ref' => $charge->id, 'amount' => $charge->amount, 'status' => $charge->status));
 
             return $charge;       
         } catch (Exception $e) {                        
@@ -319,6 +328,40 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
             $result->error = $e->getMessage();
             return $result;
         }        
+    }
+    
+    private function sendReceipt ($order_info, $pdf_url) {      
+        $path = DIR_UPLOAD.'payment_receipt_'.$order_info['order_id'].'.pdf';
+        file_put_contents($path, file_get_contents($pdf_url));
+        $this->log->write('#sendReceipt => '.$path);                   
+        
+        $data['logo'] = $order_info['store_url'] . 'image/' . $this->config->get('config_logo');
+        $data['store_name'] = $order_info['store_name'];
+        $data['store_url'] = $order_info['store_url'];
+        $data['order_id'] = $order_info['order_id'];        
+        $data['link'] = $order_info['store_url'] . 'index.php?route=account/order/info&order_id=' . $order_info['order_id'];
+        
+        $this->load->model('setting/setting');
+        $from = $this->model_setting_setting->getSettingValue('config_email', $order_info['store_id']);		
+        if (!$from) {
+            $from = $this->config->get('config_email');
+        }
+        
+        $mail = new Mail($this->config->get('config_mail_engine'));
+        $mail->parameter = $this->config->get('config_mail_parameter');
+        $mail->smtp_hostname = $this->config->get('config_mail_smtp_hostname');
+        $mail->smtp_username = $this->config->get('config_mail_smtp_username');
+        $mail->smtp_password = html_entity_decode($this->config->get('config_mail_smtp_password'), ENT_QUOTES, 'UTF-8');
+        $mail->smtp_port = $this->config->get('config_mail_smtp_port');
+        $mail->smtp_timeout = $this->config->get('config_mail_smtp_timeout');
+
+        $mail->setTo($order_info['email']);
+        $mail->setFrom($from);
+        $mail->setSender(html_entity_decode($order_info['store_name'], ENT_QUOTES, 'UTF-8'));
+        $mail->setSubject('Recibo de pago - Orden #'.$order_info['order_id']);
+        $mail->setHtml($this->load->view('extension/payment/openpay_stores_mail', $data));
+        $mail->addAttachment($path);
+        $mail->send();
     }
 
 }

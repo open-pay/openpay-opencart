@@ -4,8 +4,16 @@
 <div class="container">    
     <div class="row">              
         <div class="col-lg-8 col-lg-offset-2">
+            <h2>Recibo de pago</h2>
             <iframe id="pdf" src="{{ pdf }}" style="width:100%; height:960px; visibility: visible !important; opacity: 1 !important;" frameborder="1"></iframe>    
         </div>
+        
+        {% if show_map %}    
+            <div class="col-lg-8 col-lg-offset-2" style="margin-top: 20px; margin-bottom: 20px; ">
+                <h2>Mapa de tiendas</h2>
+                <iframe src="https://www.paynet.com.mx/mapa-tiendas/index.html?locationNotAllowed=true&postalCode={{ postcode }}" style="border: 1px solid #000; width:100%; height:300px;" frameborder="0"></iframe>                                
+            </div>
+        {% endif %}    
         
         <div class="col-lg-8 text-center col-lg-offset-2" style="margin-top: 30px; margin-bottom: 30px;">
             <a type="button" class="btn btn-success btn-lg" id="button-confirm"><i class="fa fa-check"></i> Regresar a la tienda</a>

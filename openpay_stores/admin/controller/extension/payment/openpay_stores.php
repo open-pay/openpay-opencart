@@ -81,10 +81,6 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
 
         $data['heading_title'] = $this->language->get('heading_title');
 
-        $data['tab_api'] = $this->language->get('tab_api');
-        $data['tab_general'] = $this->language->get('tab_general');
-        $data['tab_status'] = $this->language->get('tab_status');
-
         $data['text_enabled'] = $this->language->get('text_enabled');
         $data['text_disabled'] = $this->language->get('text_disabled');
         $data['text_all_zones'] = $this->language->get('text_all_zones');
@@ -102,23 +98,15 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
         $data['text_wait_page_load'] = $this->language->get('text_wait_page_load');
         $data['text_form'] = $this->language->get('text_form');
 
-        $data['entry_test_merchant_id'] = $this->language->get('entry_test_merchant_id');
-        $data['entry_live_merchant_id'] = $this->language->get('entry_live_merchant_id');
-        $data['entry_test_secret_key'] = $this->language->get('entry_test_secret_key');        
-        $data['entry_live_secret_key'] = $this->language->get('entry_live_secret_key');        
-        $data['entry_deadline'] = $this->language->get('entry_deadline');
         $data['entry_mode'] = $this->language->get('entry_mode');
         $data['entry_method'] = $this->language->get('entry_method');
         $data['entry_total'] = $this->language->get('entry_total');
-        $data['entry_order_status'] = $this->language->get('entry_order_status');
-        $data['entry_geo_zone'] = $this->language->get('entry_geo_zone');
+        $data['entry_order_status'] = $this->language->get('entry_order_status');        
         $data['entry_status'] = $this->language->get('entry_status');
         $data['entry_sort_order'] = $this->language->get('entry_sort_order');
         $data['entry_ipn'] = $this->language->get('entry_ipn');
         $data['entry_captured_status'] = $this->language->get('entry_captured_status');
-        $data['entry_completed_status'] = $this->language->get('entry_completed_status');
-        $data['entry_new_status'] = $this->language->get('entry_new_status');
-        $data['entry_title'] = $this->language->get('entry_title');
+        $data['entry_completed_status'] = $this->language->get('entry_completed_status');            
 
         $data['button_save'] = $this->language->get('button_save');
         $data['button_cancel'] = $this->language->get('button_cancel');
@@ -166,6 +154,8 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
         $data['payment_openpay_stores_total'] = $this->fillSetting('payment_openpay_stores_total');
         $data['payment_openpay_stores_sort_order'] = $this->fillSetting('payment_openpay_stores_sort_order');        
         $data['payment_openpay_stores_geo_zone_id'] = $this->fillSetting('payment_openpay_stores_geo_zone_id');
+        
+        $data['show_map'] = $this->fillSetting('payment_openpay_stores_show_map', '0');
 
         $data['header'] = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
