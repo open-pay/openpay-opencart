@@ -86,10 +86,6 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
 
         $data['heading_title'] = $this->language->get('heading_title');
 
-        $data['tab_api'] = $this->language->get('tab_api');
-        $data['tab_general'] = $this->language->get('tab_general');
-        $data['tab_status'] = $this->language->get('tab_status');
-
         $data['text_enabled'] = $this->language->get('text_enabled');
         $data['text_disabled'] = $this->language->get('text_disabled');
         $data['text_all_zones'] = $this->language->get('text_all_zones');
@@ -120,8 +116,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
         $data['entry_geo_zone'] = $this->language->get('entry_geo_zone');
         $data['entry_status'] = $this->language->get('entry_status');
         $data['entry_sort_order'] = $this->language->get('entry_sort_order');
-        $data['entry_completed_status'] = $this->language->get('entry_completed_status');
-        $data['entry_new_status'] = $this->language->get('entry_new_status');
+        $data['entry_completed_status'] = $this->language->get('entry_completed_status');        
         $data['entry_title'] = $this->language->get('entry_title');
 
         $data['button_save'] = $this->language->get('button_save');
@@ -194,6 +189,10 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
             <p>* ¿Qué es la autenticación selectiva? Es cuando el banco se encarga de validar la autenticidad del cuentahabiente, solo si Openpay detecta riesta en la operación.</p>
             <p>* ¿Qué es 3D Secure? El banco se encargará de validar su autenticidad del cuentahabiente en todas las operaciones.</p>';
         
+        $data['use_card_points'] = $this->fillSetting('payment_openpay_cards_use_card_points', '0'); 
+        $data['capture'] = $this->fillSetting('payment_openpay_cards_capture', '1');
+        $data['save_cc'] = $this->fillSetting('payment_openpay_cards_save_cc', '0');
+        
         $data['header'] = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
         $data['footer'] = $this->load->controller('common/footer');
@@ -203,6 +202,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
 
     protected function validate() {
         $min_total = 1;
+        //$this->model_setting_event->addEvent('openpay_cards_add_order', 'catalog/model/checkout/order/addOrderHistory/after', 'extension/payment/openpay_cards/eventAddOrderHistory');
         if (!$this->user->hasPermission('modify', 'extension/payment/openpay_cards')) {
             $this->error['warning'] = $this->language->get('error_permission');
         }
@@ -260,12 +260,18 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
         return false;
     }
 
-    public function install() {
+    public function install() {        
+        $this->load->model('setting/event');
         $this->load->model('extension/payment/openpay_cards');
+        
+        $this->model_setting_event->addEvent('openpay_cards_add_order_history', 'catalog/model/checkout/order/addOrderHistory/after', 'extension/payment/openpay_cards/eventAddOrderHistory');
         $this->model_extension_payment_openpay_cards->install();        
     }
 
-    public function uninstall() {
+    public function uninstall() {        
+        $this->load->model('setting/event');        
+        $this->model_setting_event->deleteEventByCode('openpay_cards_add_order_history');
+        
         //$this->load->model('extension/payment/openpay_cards');
         //$this->model_extension_payment_openpay_cards->uninstall();
         

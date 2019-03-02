@@ -54,4 +54,8 @@ class ModelExtensionPaymentOpenpayCards extends Model {
         $this->db->query("DROP TABLE IF EXISTS " . DB_PREFIX . "openpay_customer");
     }
 
+    public function addOrderHistory($order_id, $post_data, $api_token) {
+		
+    }
+    
 }

@@ -1,7 +1,7 @@
 <link rel="stylesheet" type="text/css" href="/catalog/view/theme/default/stylesheet/openpay_cards.css">
 
 <form action="{{ action }}" method="POST" id="payment-form" class="form-horizontal">
-
+    <input type="hidden" name="use_card_points" id="use_card_points" value="false">
     <div class="content" id="payment">
         <div class="row" id="header">
             <div class="col-sm-6">
@@ -33,54 +33,81 @@
         </div>
 
         <div id="msgBox" role="alert"><i></i><span style="margin-left:10px;"></span></div>
+        
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for='openpay_cc'>
+                Información de pago
+            </label>
+            <div class="col-sm-4">
+                <select id="openpay_cc" name="openpay_cc" class="form-control">                    
+                    {% for option in cc_options %}
+                        <option value="{{ option['value'] }}">{{ option['name'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>            
+        </div>
 
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for='cc-owner'>
-                {{ entry_cc_owner }}
-            </label>
-            <div class="col-sm-4">
-                <input type="text" id="cc-owner" class="form-control" data-openpay-card="holder_name" autocomplete="off" >
+        <div id="payment_form_openpay_cards">        
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for='cc-owner'>
+                    {{ entry_cc_owner }}
+                </label>
+                <div class="col-sm-4">
+                    <input type="text" id="cc-owner" class="form-control" data-openpay-card="holder_name" autocomplete="off" >
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for='cc-number'>
-                {{ entry_cc_number }}
-            </label>
-            <div class="col-sm-4">
-                <input type="text" id="cc-number" class="form-control" data-openpay-card="card_number" autocomplete="off" >
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for='cc-number'>
+                    {{ entry_cc_number }}
+                </label>
+                <div class="col-sm-4">
+                    <input type="text" id="cc-number" class="form-control" data-openpay-card="card_number" autocomplete="off" maxlength="16">
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="cc-month">
-                {{ entry_cc_expire_date }}
-            </label>
-            <div class="col-sm-2">
-                <select id="cc-month" data-openpay-card="expiration_month" class="form-control">                    
-                    {% for month in months %}
-                        <option value="{{ month['value'] }}">{{ month['text'] }}</option>
-                    {% endfor %}
-                </select>
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="cc-month">
+                    {{ entry_cc_expire_date }}
+                </label>
+                <div class="col-sm-2">
+                    <select id="cc-month" data-openpay-card="expiration_month" class="form-control">                    
+                        {% for month in months %}
+                            <option value="{{ month['value'] }}">{{ month['text'] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-sm-2">
+                    <select id="cc-year" data-openpay-card="expiration_year" class="form-control">                    
+                        {% for year in year_expire %}
+                            <option value="{{ year['value'] }}">{{ year['text'] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
-            <div class="col-sm-2">
-                <select id="cc-year" data-openpay-card="expiration_year" class="form-control">                    
-                    {% for year in year_expire %}
-                        <option value="{{ year['value'] }}">{{ year['text'] }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-2 control-label" for="cc-cvv">
-                {{ entry_cc_cvv2 }}
-            </label>
-            <div class="col-sm-2">
-                <input id="cc-cvv" type="text" autocomplete="off" data-openpay-card="cvv2" class="form-control" >
-            </div>
-            <div class="col-sm-2">
-                <img data-toggle="popover" data-content="{{ help_cvc_back }}" src="/catalog/view/theme/default/image/cvc_back.png" alt="Tarjetas" class="cvv" style="cursor:pointer;">
-                <img data-toggle="popover" data-content="{{ help_cvc_front }}" src="/catalog/view/theme/default/image/cvc_front.png" alt="Tarjetas" class="cvv" style="cursor:pointer;">
-            </div>
-        </div>        
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="cc-cvv">
+                    {{ entry_cc_cvv2 }}
+                </label>
+                <div class="col-sm-2">
+                    <input id="cc-cvv" type="password" autocomplete="off" data-openpay-card="cvv2" class="form-control" maxlength="4">
+                </div>
+                <div class="col-sm-2">
+                    <img data-toggle="popover" data-content="{{ help_cvc_back }}" src="/catalog/view/theme/default/image/cvc_back.png" alt="Tarjetas" class="cvv" style="cursor:pointer;">
+                    <img data-toggle="popover" data-content="{{ help_cvc_front }}" src="/catalog/view/theme/default/image/cvc_front.png" alt="Tarjetas" class="cvv" style="cursor:pointer;">
+                </div>
+            </div>    
+
+            {% if save_cc %}    
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" for="save_cc">
+                        Guardar tarjeta
+                    </label>
+                    <div class="col-sm-10"  style="padding-top: 7px;">
+                        <input type="checkbox" name="save_cc" id="save_cc" class="form-check-input" />
+                    </div>    
+                </div>     
+            {% endif %}
+        </div>    
+        
         {% if months_interest_free|length > 0 %}
             <div class="form-group">
                 <label class="col-sm-2 control-label" for="cc-cvv">
@@ -155,50 +182,95 @@
             OpenPay.setApiKey('{{ public_key }}');
             OpenPay.setSandboxMode({{ test_mode }});
             OpenPay.deviceData.setup("payment-form", "device_session_id");
-    }
+        }
 
+        var use_card_points = '{{use_card_points}}' === '1' ? true : false;
+        console.log('use_card_points', {{save_cc}})
+        
+        $("body").append('<div class="modal fade" role="dialog" id="card-points-dialog"> <div class="modal-dialog modal-sm"> <div class="modal-content"> <div class="modal-header"> <h4 class="modal-title">Pagar con Puntos</h4> </div> <div class="modal-body"> <p>¿Desea usar los puntos de su tarjeta para realizar este pago?</p> </div> <div class="modal-footer"> <button type="button" class="btn btn-success" data-dismiss="modal" id="points-yes-button">Si</button> <button type="button" class="btn btn-default" data-dismiss="modal" id="points-no-button">No</button> </div> </div> </div></div>');
+                 
+        $("#openpay_cc").change(function() {      
+            if ($('#openpay_cc').val() !== "new") {                                 
+                $('#save_cc').prop('checked', false);                
+                $('#save_cc').prop('disabled', true);                 
+
+                $('#cc-owner').val("");
+                $('#cc-number').val("");                                     
+                $('#cc-cvv').val("");                                                     
+
+                $('#payment_form_openpay_cards').hide();
+            } else {                    
+                $('#payment_form_openpay_cards').show();            
+                $('#save_cc').prop('disabled', false);
+            }
+        });  
 
         $('#payment-form').submit(function(event) {
             /* Prevent the form from submitting with the default action */
             event.preventDefault();
-            //return false;
+            
             $("#button-confirm").button( 'loading' );
             addMsg( '{{ text_wait }}' , 'warning' );
             setApiKey();
             console.log("submit!!!");
+            
+            if ($('#openpay_cc').val() !== 'new') {
+                $(this).append('<input type="hidden" name="token" value="' + $('#openpay_cc').val() + '" />');
+                submitAjaxForm();
+                return false;
+            }
+            
             OpenPay.token.extractFormAndCreate('payment-form', success_callbak, error_callbak);
             return false;
-    });
+        });
+        
+        $("#points-yes-button").on('click', function () {        
+            $('#use_card_points').val('true');
+            submitAjaxForm();
+        });
 
+        $("#points-no-button").on('click', function () {        
+            $('#use_card_points').val('false');
+            submitAjaxForm();
+        });
 
         function addMsg( msg , type ){
-            var $msgBox = $( '#msgBox' );
+            var $msgBox = $('#msgBox');
 
             $msgBox[ 0 ].className =  'alert alert-' + type;
             $msgBox.find( 'span' ).text( msg );
 
             var className = '';
             switch( type ){
-                    case 'danger' :
-                            className = 'fa-lg fa fa-exclamation-triangle';
-                    break;
-                    case 'warning' :
-                            className = 'fa fa-cog fa-spin urgent-2x';
-                    break;
-                    case 'success' :
-                            className = 'fa-2x fa fa-check';
-                    break;
+                case 'danger' :
+                        className = 'fa-lg fa fa-exclamation-triangle';
+                break;
+                case 'warning' :
+                        className = 'fa fa-cog fa-spin urgent-2x';
+                break;
+                case 'success' :
+                        className = 'fa-2x fa fa-check';
+                break;
             }
             $msgBox.find( 'i' )[ 0 ].className = className;
-    }
+        }
 
 
         var success_callbak = function(response) {
             var token_id = response.data.id;
-            var $form = $('#payment-form'), $msgBox = $( '#msgBox' );
+            var $msgBox = $( '#msgBox' );
             $msgBox.find( 'img' ).remove();            
             $('#payment-form').append('<input type="hidden" name="token" value="' + escape(token_id) + '" />');
-
+            
+            if (response.data.card.points_card && use_card_points) {
+                $("#card-points-dialog").modal("show");                
+            } else {
+                submitAjaxForm();
+            }                        
+        };
+        
+        function submitAjaxForm() {
+            var $form = $('#payment-form');
             $.ajax({
                 url: '{{ action }}',
                 type: 'post',
@@ -222,9 +294,7 @@
                     }
                 }
             });
-
-        };
-
+        }
 
         var error_callbak = function(response) {
             var $form = $('#payment-form');            

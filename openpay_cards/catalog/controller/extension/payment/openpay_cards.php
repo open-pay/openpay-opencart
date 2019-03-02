@@ -8,6 +8,11 @@ if (!defined('OWNER'))
 
 class ControllerExtensionPaymentOpenpayCards extends Controller
 {
+    
+    protected $processing_status_id = 2;
+    protected $complete_status_id = 5;
+    protected $pending_status_id = 1;
+    protected $refunded_status_id = 11;
 
     public function index() {
         $this->language->load('extension/payment/openpay_cards');
@@ -55,6 +60,9 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         }
 
         $data['months_interest_free'] = $this->getMonthsInterestFree();
+        $data['use_card_points'] = $this->useCardPoints();
+        $data['save_cc'] = $this->canSaveCC() && $this->customer->isLogged();                
+        $data['cc_options'] = $this->getCreditCardList();
 
         $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
         $data['total'] = $order_info['total'];
@@ -93,7 +101,6 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         $customer = $this->model_extension_payment_openpay_cards->getCustomer($this->customer->getId());
 
         if ($customer == false) {
-
             $this->log->write("Create Openapy Customer");
 
             $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
@@ -119,7 +126,11 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
                 return;
             }
         }
-
+        
+        $capture_config = $this->config->get('payment_openpay_cards_capture')  === null ? '1' : $this->config->get('payment_openpay_cards_capture');
+        $capture = $capture_config === '1' ? true : false;
+        $this->log->write('$capture => '.json_encode($capture));
+        
         $charge_request = array(
             'method' => 'card',
             'currency' => $this->config->get('config_currency'),
@@ -127,7 +138,9 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             'source_id' => $this->request->post['token'],
             'device_session_id' => $this->request->post['device_session_id'],
             'description' => 'Order ID# '.$this->session->data['order_id'],
-            'order_id' => $this->session->data['order_id']
+            //'order_id' => $this->session->data['order_id'],
+            'use_card_points' => $this->request->post['use_card_points'],
+            'capture' => $capture == '1' ? true : false
         );
 
         if (isset($this->request->post['interest_free']) && $this->request->post['interest_free'] > 1) {
@@ -137,9 +150,24 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         if ($this->config->get('payment_openpay_cards_charge_type') == '3d') {
             $charge_request['use_3d_secure'] = true;
             $charge_request['redirect_url'] = $this->config->get('config_url').'index.php?route=extension/payment/openpay_cards/confirm3d';            
-        }        
+        }      
         
-
+        if (isset($this->request->post['save_cc'])) {
+            $card_data = array(            
+                'token_id' => $this->request->post['token'],            
+                'device_session_id' => $this->request->post['device_session_id']
+            );
+            $card = $this->createCreditCard($customer, $card_data);
+            
+            if (isset($card->error)) {            
+                $json['error'] = $card->error;
+                $this->response->setOutput(json_encode($json));            
+                return;
+            }
+            
+            $charge_request['source_id'] = $card->id;
+        }
+        
         $charge = $this->createOpenpayCharge($customer, $charge_request);
 
         if (isset($charge->error)) {            
@@ -208,19 +236,23 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
     
     
     private function setCustomOrder($charge) {        
-        $status_id = $this->config->get('payment_openpay_cards_order_status_id');
-        $comment = '';
+        $capture_config = $this->config->get('payment_openpay_cards_capture')  === null ? '1' : $this->config->get('payment_openpay_cards_capture');
+        $capture = $capture_config === '1' ? true : false;
+        
+        $status_id = $capture ? $this->config->get('payment_openpay_cards_order_status_id') : $this->pending_status_id;
+        $comment = $capture ? 'Cargo realizado' : 'Pre-autorización';
         $notify = true;        
         
         if (isset($charge->payment_method) && $charge->payment_method->type == 'redirect') {            
-            $status_id = 1; // Si se usa 3D secure se marca como "Pendiente" => (1)
+            $status_id = $this->pending_status_id; // Si se usa 3D secure se marca como "Pendiente" => (1)
             $comment = 'En espera de confirmación 3D Secure';
             $notify = false;
         }                
             
         $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $status_id, $comment, $notify);
         $this->model_extension_payment_openpay_cards->addOrder(array(
-            'order_id' => $charge->order_id,
+            //'order_id' => $charge->order_id,
+            'order_id' => $this->session->data['order_id'],
             'charge_ref' => $charge->id,
             'capture_status' => $status_id,
             'description' => $charge->description,
@@ -344,7 +376,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             $charge = $this->openpayRequest('customers/'.$customer->id.'/charges', 'POST', $charge_request);
 
             $this->load->model('extension/payment/openpay_cards');
-            $this->model_extension_payment_openpay_cards->addTransaction(array('type' => 'Charge creation', 'charge_ref' => $charge->id, 'amount' => $charge->amount, 'status' => $charge->status));
+            $this->model_extension_payment_openpay_cards->addTransaction(array('type' => 'Charge creation', 'charge_ref' => $charge->id, 'customer_ref' => $customer->id, 'amount' => $charge->amount, 'status' => $charge->status));
 
             return $charge;       
         } catch (Exception $e) {                        
@@ -355,9 +387,85 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         }        
     }
     
+    private function createCreditCard($customer, $data) {
+        try {                        
+            return $this->openpayRequest('customers/'.$customer->id.'/cards', 'POST', $data);            
+        } catch (Exception $e) {                        
+            $result = new stdClass();
+            $result->error = $this->error($e->getCode());
+            $result->error_code = $e->getCode();
+            return $result;
+        }        
+    }
+    
+    private function getCreditCardList() {
+        if (!$this->customer->isLogged()) {            
+            return array(array('value' => 'new', 'name' => 'Nueva tarjeta'));
+        }        
+                
+        $this->load->model('extension/payment/openpay_cards');
+        $customer = $this->model_extension_payment_openpay_cards->getCustomer($this->customer->getId());
+        
+        if ($customer == false) {
+            return array(array('value' => 'new', 'name' => 'Nueva tarjeta'));
+        } 
+        
+        $list = array(array('value' => 'new', 'name' => 'Nueva tarjeta'));        
+        try {            
+            //$card = $this->openpayRequest('customers/'.$customer->id.'/cards', 'POST', $data);
+            $openpay_customer = $this->getOpenpayCustomer($customer['openpay_customer_id']);            
+            
+            $cards = $this->getCreditCards($openpay_customer);            
+            foreach ($cards as $card) {                
+                array_push($list, array('value' => $card->id, 'name' => strtoupper($card->brand).' '.$card->card_number));
+            }
+            
+            return $list;            
+        } catch (Exception $e) {
+            $result = new stdClass();
+            $result->error = $this->error($e->getCode());
+            $result->error_code = $e->getCode();
+            return $result;
+        }        
+    }
+    
+    private function getCreditCards($customer) {        
+        try {
+            return $this->openpayRequest('customers/'.$customer->id.'/cards?offset=0&limit=10', 'GET');            
+        } catch (Exception $e) {
+            throw $e;
+        }        
+    }
+    
+    private function capture($trx_id, $total) {
+        try {                        
+            $charge = $this->openpayRequest('charges/'.$trx_id.'/capture', 'POST', array('amount' => $total));
+
+            $this->load->model('extension/payment/openpay_cards');
+            $this->model_extension_payment_openpay_cards->updateTransactionStatus(array('trx_id' => $trx_id, 'type' => 'Confirmed charge', 'status' => $charge->status));                        
+
+            return $charge;       
+        } catch (Exception $e) {                        
+            throw $e;
+        }        
+    }
+    
+    private function refund($trx_id, $total, $comment = '') {
+        try {                        
+            $charge = $this->openpayRequest('charges/'.$trx_id.'/refund', 'POST', array('amount' => $total, 'description' => $comment));
+
+            $this->load->model('extension/payment/openpay_cards');
+            $this->model_extension_payment_openpay_cards->updateTransactionStatus(array('trx_id' => $trx_id, 'type' => 'Refunded charge', 'status' => $charge->status));                        
+
+            return $charge;       
+        } catch (Exception $e) {                        
+            throw $e;
+        }        
+    }
+    
     private function getOpenpayCharge($trx_id) {
         try {                        
-            return $this->openpayRequest('/charges/'.$trx_id, 'GET');            
+            return $this->openpayRequest('charges/'.$trx_id, 'GET');            
         } catch (Exception $e) {            
             $result = new stdClass();
             $result->error = $this->error($e->getCode());
@@ -468,6 +576,14 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         }
     }
     
+    private function useCardPoints() {
+        return $this->config->get('payment_openpay_cards_use_card_points');
+    }
+    
+    private function canSaveCC() {
+        return $this->config->get('payment_openpay_cards_save_cc') == '1' ? true : false;
+    }
+    
     private function clearCart() {
         if (isset($this->session->data['order_id'])) {
             $this->cart->clear();
@@ -485,6 +601,73 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             unset($this->session->data['totals']);
         }
         return;
+    }   
+    
+    public function eventAddOrderHistory($route, $args, $output) {   
+        $order_id = (int) $args[0];
+        
+        $this->load->model('checkout/order');
+        $order_info = $this->model_checkout_order->getOrder($order_id);
+        
+        // Validación de metódo de pago con tarjetas únicamente
+        if ($order_info['payment_code'] != 'openpay_cards') {
+            return;
+        }
+        
+        $this->log->write('#eventAddOrderHistory Event fired: ' . $route);        
+        $this->log->write('Input json_encode => '.json_encode($args));   
+        
+        $order_status_id = (int) $args[1]; 
+        $comment = $args[2];        
+        
+        $this->load->model('extension/payment/openpay_cards');
+        $openpay_order = $this->model_extension_payment_openpay_cards->getOrder($order_id);
+        
+        // Aún no se ha registrado la orden o se utiliza otro método de pago
+        if ($openpay_order === null) {
+            $this->log->write('Asignación inicial del estatus de la orden');
+            return;
+        }
+        
+        try {
+            $charge = $this->getOpenpayCharge($openpay_order['charge_ref']);
+            $this->log->write('Openpay charge_status => '.$charge->status);   
+            $this->log->write('Openpay refunds_property_exists => '.json_encode(array('exists' => property_exists($charge, 'refunds'))));   
+            
+            
+            // Capturar OC Pre-autorizadas
+            if ($charge->status == 'in_progress' && in_array($order_status_id, array($this->complete_status_id, $this->processing_status_id))) {            
+                $this->log->write('capture trx_id => '.$openpay_order['charge_ref']);
+
+                $this->capture($openpay_order['charge_ref'], $openpay_order['total']);    
+                                
+                $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, 'Cargo capturado exitosamente - Openpay', false);
+            }
+
+            // Realizar reembolso total
+            if ($charge->status == 'completed' && !property_exists($charge, 'refunds') && $order_status_id == $this->refunded_status_id) {
+                $this->log->write('refund trx_id => '.$openpay_order['charge_ref']);
+
+                $refund = $this->refund($openpay_order['charge_ref'], $openpay_order['total'], $comment); 
+                
+                if (property_exists($refund, 'refunds')) {
+                    $this->model_checkout_order->addOrderHistory($order_id, $order_status_id, 'Cargo reembolsado - Openpay', false);
+                }                                                
+            }  
+            
+            return;
+        } catch (Exception $e) {
+            $this->log->write('#eventAddOrderHistory ERROR => '. json_encode(array(
+                'message' => $e->getMessage(), 
+                'file' => $e->getFile(), 
+                'line' => $e->getLine())
+            ));
+            
+            //$this->model_checkout_order->addOrderHistory($order_id, $order_status_id, 'ERROR - '.$e->getMessage(), false);
+//            $this->response->addHeader('Content-Type: application/json');
+//            $this->response->setOutput(json_encode(array('error' => 'ERROR - '.$e->getMessage())));    
+            throw $e;
+        }              
     }
 
 }

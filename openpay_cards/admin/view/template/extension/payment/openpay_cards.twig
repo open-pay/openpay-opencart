@@ -36,9 +36,9 @@
             <div class="panel-body">
                 <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-product" class="form-horizontal">
                     <ul class="nav nav-tabs">
-                        <li class="active"><a href="#tab-api" data-toggle="tab">{{ tab_api }}</a></li>
-                        <li><a href="#tab-general" data-toggle="tab">{{ tab_general }}</a></li>
-                        <li><a href="#tab-status" data-toggle="tab">{{ tab_status }}</a></li>
+                        <li class="active"><a href="#tab-api" data-toggle="tab">Configuración de llaves</a></li>
+                        <li><a href="#tab-general" data-toggle="tab">Configuración de los cargos</a></li>
+                        <li><a href="#tab-status" data-toggle="tab">Estatus</a></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane active " id="tab-api">
@@ -213,7 +213,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="payment_openpay_cards_charge_type">
-                                    Charge configuration 
+                                    ¿Cómo procesar el cargo?
                                     <span class="glyphicon" data-toggle="popover" data-content="{{ help_charge_types }}" data-html="true" style="cursor:pointer;" ></span>
                                 </label>
                                 <div class="col-sm-10">                                                                     
@@ -224,11 +224,48 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="capture">
+                                    Configuración del cargo
+                                    <span class="glyphicon" data-toggle="popover" data-content="Indica si el cargo se hace o no inmediatamente, con la pre-autorización solo se reserva el monto para ser confirmado o cancelado posteriormente. Las pre-autorizaciones no pueden ser utilizadas en combinación con pago con puntos Bancomer." data-html="true" style="cursor:pointer;" ></span>
+                                </label>
+                                <div class="col-sm-10">                                                                     
+                                    <select name="payment_openpay_cards_capture" id="capture" class="form-control">
+                                        <option value="1" {% if capture == "1" %} selected {% endif %}>Cargo inmediato</option>                                        
+                                        <option value="0" {% if capture == "0" %} selected {% endif %}>Pre-autorizar únicamente</option>                                        
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="card_points">
+                                    Pago con puntos
+                                    <span class="glyphicon" data-toggle="popover" data-content="Recibe pagos con puntos Bancomer habilitando esta opción. Esta opción no se puede combinar con pre-autorizaciones o MSI." data-html="true" style="cursor:pointer;" ></span>
+                                </label>
+                                <div class="col-sm-10">                                                                     
+                                    <select name="payment_openpay_cards_use_card_points" id="use_card_points" class="form-control">
+                                        <option value="0" {% if use_card_points == "0" %} selected {% endif %}>NO</option>                                        
+                                        <option value="1" {% if use_card_points == "1" %} selected {% endif %}>SI</option>                                        
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="save_cc">
+                                    Guardar tarjetas
+                                    <span class="glyphicon" data-toggle="popover" data-content="Permite a los usuarios guardar sus tarjetas de crédito para agilizar futuras compras." data-html="true" style="cursor:pointer;" ></span>
+                                </label>
+                                <div class="col-sm-10">                                                                     
+                                    <select name="payment_openpay_cards_save_cc" id="save_cc" class="form-control">
+                                        <option value="0" {% if save_cc == "0" %} selected {% endif %}>NO</option>                                        
+                                        <option value="1" {% if save_cc == "1" %} selected {% endif %}>SI</option>                                        
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                         <div class="tab-pane" id="tab-status">
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="select-new">
-                                    {{ entry_new_status }}
+                                    Estatus de la orden
+                                    <span class="glyphicon" data-toggle="popover" data-content="Las ordenes generadas a través de un cargo exitoso, mostrarán este estatus. Este estatus no aplica para pre-autorizaciones." data-html="true" style="cursor:pointer;" ></span>
                                 </label>
                                 <div class="col-sm-10">
                                     <select name="payment_openpay_cards_order_status_id" id="input-order-status" class="form-control">
