@@ -10,7 +10,7 @@ class ModelExtensionPaymentOpenpayBanks extends OpenpayModel {
         $this->load->model('localisation/currency');
         
         // Método de pago disponible únicamente para MXN
-        if ($this->session->data['currency'] != 'MXN') {
+        if ($this->config->get('config_currency') != 'MXN') {
             return array();
         }
 

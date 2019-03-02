@@ -37,9 +37,9 @@
             <div class="panel-body">
                 <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-product" class="form-horizontal">
                     <ul class="nav nav-tabs">
-                        <li class="active"><a href="#tab-api" data-toggle="tab">{{ tab_api }}</a></li>
-                        <li><a href="#tab-general" data-toggle="tab">{{ tab_general }}</a></li>
-                        <li><a href="#tab-status" data-toggle="tab">{{ tab_status }}</a></li>
+                        <li class="active"><a href="#tab-api" data-toggle="tab">Configuración de llaves</a></li>
+                        <li><a href="#tab-general" data-toggle="tab">Configuración general de pago</a></li>
+                        <li><a href="#tab-status" data-toggle="tab">Estatus</a></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane active " id="tab-api">
@@ -56,10 +56,10 @@
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="input-test-merchant-id">
-                                    {{ entry_test_merchant_id }}
+                                    Sandbox Merchant ID
                                 </label>
                                 <div class="col-sm-10">
-                                    <input type="text" name="payment_openpay_banks_test_merchant_id" value="{{ payment_openpay_banks_test_merchant_id }}" class="form-control" id="input-test-merchant" placeholder="{{ entry_test_merchant_id }}">                                    
+                                    <input type="text" name="payment_openpay_banks_test_merchant_id" value="{{ payment_openpay_banks_test_merchant_id }}" class="form-control" id="input-test-merchant">
                                     {% if error_test_merchant_id %}
                                         <div class="text-danger">{{ error_test_merchant_id }}</div>
                                     {% endif %}
@@ -67,10 +67,10 @@
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="input-test-secret">
-                                    {{ entry_test_secret_key }}
+                                    Sandbox llave secreta
                                 </label>
                                 <div class="col-sm-10">
-                                    <input type="text" name="payment_openpay_banks_test_secret_key" value="{{ payment_openpay_banks_test_secret_key }}" class="form-control" id="input-test-secret" placeholder="{{ entry_test_secret_key }}">                                    
+                                    <input type="text" name="payment_openpay_banks_test_secret_key" value="{{ payment_openpay_banks_test_secret_key }}" class="form-control" id="input-test-secret">
                                     {% if error_test_secret_key %}
                                         <div class="text-danger">{{ error_test_secret_key }}</div>
                                     {% endif %}                                    
@@ -81,10 +81,10 @@
                             </div>                            
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="input-live-merchant-id">
-                                    {{ entry_live_merchant_id }}
+                                    Producción Merchant ID
                                 </label>
                                 <div class="col-sm-10">
-                                    <input type="text" name="payment_openpay_banks_live_merchant_id" value="{{ payment_openpay_banks_live_merchant_id }}" class="form-control" id="input-live-merchant" placeholder="{{ entry_live_merchant_id }}">                                    
+                                    <input type="text" name="payment_openpay_banks_live_merchant_id" value="{{ payment_openpay_banks_live_merchant_id }}" class="form-control" id="input-live-merchant">
                                     {% if error_live_merchant_id %}
                                         <div class="text-danger">{{ error_live_merchant_id }}</div>
                                     {% endif %}
@@ -92,10 +92,10 @@
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="input-live-secret">
-                                    {{ entry_live_secret_key }}
+                                    Producción llave secreta
                                 </label>
                                 <div class="col-sm-10">
-                                    <input type="text" name="payment_openpay_banks_live_secret_key" value="{{ payment_openpay_banks_live_secret_key }}" class="form-control" id="input-live-secret" placeholder="{{ entry_live_secret_key }}">                                    
+                                    <input type="text" name="payment_openpay_banks_live_secret_key" value="{{ payment_openpay_banks_live_secret_key }}" class="form-control" id="input-live-secret">
                                     {% if error_live_secret_key %}
                                         <div class="text-danger">{{ error_live_secret_key }}</div>
                                     {% endif %}
@@ -107,32 +107,8 @@
                         </div>
                         <div class="tab-pane" id="tab-general">
                             <div class="form-group">
-                                <label class="col-sm-2 control-label" for="input-title" >
-                                    {{ entry_title }}
-                                    <span class="glyphicon" data-toggle="popover" data-content="{{ help_title }}" style="cursor:pointer;" >
-                                    </span>
-                                </label>
-                                <div class="col-sm-10">
-                                    <input type="text" name="payment_openpay_banks_title" value="{{ payment_openpay_banks_title }}" class="form-control" id="input-title" placeholder="{{ entry_title }}" >
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label" for="select-geo-zone">
-                                    {{ entry_geo_zone }}
-                                </label>
-                                <div class="col-sm-10">
-                                    <select name="payment_openpay_banks_geo_zone_id" id="select-geo-zone" class="form-control">
-                                        <option value="0">{{ text_all_zones }}</option>
-                                        {% for geo_zone in geo_zones %}
-                                            <option value="{{ geo_zone.geo_zone_id }}" {% if geo_zone.geo_zone_id == payment_openpay_banks_geo_zone_id %} selected {% endif %} >{{ geo_zone.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group">
                                 <label class="col-sm-2 control-label" for="select-module-status">
-                                    {{ entry_status }}
+                                    Estatus
                                 </label>
                                 <div class="col-sm-10">
                                     <select name="payment_openpay_banks_status" id="select-module-status" class="form-control">
@@ -146,6 +122,32 @@
                                     </select>
                                 </div>
                             </div>
+                                    
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-title" >
+                                    Título
+                                    <span class="glyphicon" data-toggle="popover" data-content="{{ help_title }}" style="cursor:pointer;" >
+                                    </span>
+                                </label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="payment_openpay_banks_title" value="{{ payment_openpay_banks_title }}" class="form-control" id="input-title" placeholder="{{ entry_title }}" >
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="select-geo-zone">
+                                    Geo zonas
+                                </label>
+                                <div class="col-sm-10">
+                                    <select name="payment_openpay_banks_geo_zone_id" id="select-geo-zone" class="form-control">
+                                        <option value="0">{{ text_all_zones }}</option>
+                                        {% for geo_zone in geo_zones %}
+                                            <option value="{{ geo_zone.geo_zone_id }}" {% if geo_zone.geo_zone_id == payment_openpay_banks_geo_zone_id %} selected {% endif %} >{{ geo_zone.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
                             <div class="form-group required">
                                 <label class="col-sm-2 control-label" for="input-total">
                                     {{ entry_total }}
@@ -168,7 +170,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="input-sort-order">
-                                    {{ entry_sort_order }}
+                                    Ordenamiento
                                 </label>
                                 <div class="col-sm-10">
                                     <input type="text" id="input-sort-order" class="form-control" name="payment_openpay_banks_sort_order" value="{{ payment_openpay_banks_sort_order }}" >
@@ -176,7 +178,8 @@
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="input-deadline">
-                                    {{ entry_deadline }}
+                                    Límite de horas para pago
+                                    <span class="glyphicon" data-toggle="popover" data-content="Define cuantas horas máximo tendrá el cliente para pagar una vez que se genera el recibo de pago." style="cursor:pointer;" ></span>
                                 </label>
                                 <div class="col-sm-10">
                                     <input type="text" id="input-deadline" class="form-control" name="payment_openpay_banks_deadline" value="{{ payment_openpay_banks_deadline }}" >
@@ -186,7 +189,8 @@
                         <div class="tab-pane" id="tab-status">
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="select-new">
-                                    {{ entry_new_status }}
+                                    Estatus de la orden
+                                    <span class="glyphicon" data-toggle="popover" data-content="Una vez que la transacción sea confirmada como pagada, el estatus de la orden se marcará con el valor que aquí definas, mientras quedarán en un estatus: 'Pendiente'." data-html="true" style="cursor:pointer;" ></span>
                                 </label>
                                 <div class="col-sm-10">
                                     <select name="payment_openpay_banks_order_status_id" id="select-new" class="form-control">                                        
