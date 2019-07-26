@@ -4,31 +4,18 @@
     <input type="hidden" name="use_card_points" id="use_card_points" value="false">
     <div class="content" id="payment">
         <div class="row" id="header">
-            <div class="col-sm-6">
+            <div class="col-sm-12">
                 <h2>{{ text_credit_card }}</h2>
-            </div>
+                <hr>
+            </div>            
         </div>
 
-        <div class="row mb20 mt20">
-            <div class="col-md-6">
-                <h3>Tarjetas de crédito</h3>
-                <div class="row">                
-                {% for i in 1..4 %}
-                    <div class="col-md-2">
-                        <img src="/catalog/view/theme/default/image/credit_cards/{{ "%02d"|format(i) }}.png" alt="Tarjetas" class="tiendas">
-                    </div>
-                {% endfor %}
-                </div>
+        <div class="row mb20">                        
+            <div class="col-md-4">                                    
+                <img src="https://openpay-plugins-screenshots.s3.amazonaws.com/tarjetas_2x.png" alt="Tarjetas" class="tiendas">
             </div>
-            <div class="col-md-6">
-                <h3>Tarjetas de débito</h3>
-                <div class="row">                
-                {% for i in 1..6 %}
-                    <div class="col-md-2">
-                        <img src="/catalog/view/theme/default/image/debit_cards/{{ "%02d"|format(i) }}.png" alt="Tarjetas" class="tiendas">
-                    </div>
-                {% endfor %}
-                </div>
+            <div class="col-md-12">                    
+                <img src="https://openpay-plugins-screenshots.s3.amazonaws.com/bancos_2x.png" alt="Tarjetas" class="tiendas">
             </div>
         </div>
 
@@ -91,8 +78,8 @@
                     <input id="cc-cvv" type="password" autocomplete="off" data-openpay-card="cvv2" class="form-control" maxlength="4">
                 </div>
                 <div class="col-sm-2">
-                    <img data-toggle="popover" data-content="{{ help_cvc_back }}" src="/catalog/view/theme/default/image/cvc_back.png" alt="Tarjetas" class="cvv" style="cursor:pointer;">
-                    <img data-toggle="popover" data-content="{{ help_cvc_front }}" src="/catalog/view/theme/default/image/cvc_front.png" alt="Tarjetas" class="cvv" style="cursor:pointer;">
+                    <img data-toggle="popover" data-content="{{ help_cvc_back }}" src="https://openpay-plugins-screenshots.s3.amazonaws.com/cvc_back.png" alt="Tarjetas" class="cvv" style="cursor:pointer;">
+                    <img data-toggle="popover" data-content="{{ help_cvc_front }}" src="https://openpay-plugins-screenshots.s3.amazonaws.com/cvc_front.png" alt="Tarjetas" class="cvv" style="cursor:pointer;">
                 </div>
             </div>    
 
