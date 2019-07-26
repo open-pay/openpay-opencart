@@ -75,8 +75,8 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
                     $this->response->setOutput(json_encode($json));
                     return;
                 }
-
-                $amount = round($order_info['total'], 2);
+                
+                $amount = number_format((float)$order_info['total'], 2, '.', '');
 
                 $deadline = $this->config->get('payment_openpay_stores_deadline');
                 if ($deadline > 0) {
@@ -91,7 +91,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
                     'currency' => 'mxn',
                     'amount' => $amount,
                     'description' => 'Order ID# '.$this->session->data['order_id'],
-                    //'order_id' => $this->session->data['order_id'],
+                    'order_id' => $this->session->data['order_id'],
                     'due_date' => $due_date
                 );
                 $charge = $this->createOpenpayCharge($customer, $charge_request);

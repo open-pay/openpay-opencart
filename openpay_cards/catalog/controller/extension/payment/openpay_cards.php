@@ -94,8 +94,8 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             $this->response->setOutput(json_encode($json));
             return;
         }
-
-        $amount = round($order_info['total'], 2);
+        
+        $amount = number_format((float)$order_info['total'], 2, '.', '');
 
         $this->load->model('extension/payment/openpay_cards');
         $customer = $this->model_extension_payment_openpay_cards->getCustomer($this->customer->getId());
@@ -138,7 +138,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             'source_id' => $this->request->post['token'],
             'device_session_id' => $this->request->post['device_session_id'],
             'description' => 'Order ID# '.$this->session->data['order_id'],
-            //'order_id' => $this->session->data['order_id'],
+            'order_id' => $this->session->data['order_id'],
             'use_card_points' => $this->request->post['use_card_points'],
             'capture' => $capture == '1' ? true : false
         );

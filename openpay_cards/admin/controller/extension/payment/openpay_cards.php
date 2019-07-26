@@ -241,7 +241,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
         }
 
         if (!isset($this->request->post['payment_openpay_cards_total']) || (float) $this->request->post['payment_openpay_cards_total'] < (float) $min_total) {
-            $this->error['total'] = sprintf($this->language->get('error_total'), $this->currency->format(MIN_TOTAL, $this->config->get('config_currency')));
+            $this->error['total'] = sprintf($this->language->get('error_total'), $this->currency->format($min_total, $this->config->get('config_currency')));
         }
 
         if (empty($this->error)) {

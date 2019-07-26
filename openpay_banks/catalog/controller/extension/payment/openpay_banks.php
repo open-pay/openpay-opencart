@@ -75,8 +75,8 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
                     $this->response->setOutput(json_encode($json));
                     return;
                 }
-
-                $amount = round($order_info['total'], 2);
+                
+                $amount = number_format((float)$order_info['total'], 2, '.', '');
 
                 $deadline = $this->config->get('payment_openpay_banks_deadline');
 
