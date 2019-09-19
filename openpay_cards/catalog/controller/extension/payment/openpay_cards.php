@@ -15,6 +15,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
     protected $refunded_status_id = 11;
 
     public function index() {
+        $this->load->model('checkout/order');   
         $this->language->load('extension/payment/openpay_cards');
 
         $data['action'] = $this->url->link('extension/payment/openpay_cards/confirm', '', true);
@@ -248,6 +249,8 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             $comment = 'En espera de confirmación 3D Secure';
             $notify = false;
         }                
+        
+        $this->load->model('checkout/order'); 
             
         $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $status_id, $comment, $notify);
         $this->model_extension_payment_openpay_cards->addOrder(array(
