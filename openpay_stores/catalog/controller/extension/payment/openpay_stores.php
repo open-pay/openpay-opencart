@@ -39,12 +39,15 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
                 return;
             }
 
+            $this->load->model('account/customer');
             $this->load->model('checkout/order');
             $this->language->load('extension/payment/openpay_stores');
-
-
             $this->load->model('extension/payment/openpay_stores');
-            $customer = $this->model_extension_payment_openpay_stores->getCustomer($this->customer->getId());
+                        
+            $customer = false;
+            if ($this->customer->isLogged()) {
+                $customer = $this->model_extension_payment_openpay_stores->getCustomer($this->customer->getId());
+            }
 
             if ($customer == false) {
                 $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
@@ -281,10 +284,14 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
     private function createOpenpayCustomer($customer_data, $oc_customer_id) {       
         try {            
             $customer = $this->openpayRequest('customers', 'POST', $customer_data);
-
-            $this->load->model('extension/payment/openpay_cards');
-            $this->model_extension_payment_openpay_stores->addTransaction(array('type' => 'Customer creation', 'customer_ref' => $customer->id));
-            $this->model_extension_payment_openpay_stores->addCustomer(array('customer_id' => $oc_customer_id, 'openpay_customer_id' => $customer->id));
+            
+            $this->load->model('account/customer');
+            $this->load->model('extension/payment/openpay_stores');
+            
+            if ($this->customer->isLogged()) {     
+                $this->model_extension_payment_openpay_stores->addCustomer(array('customer_id' => $oc_customer_id, 'openpay_customer_id' => $customer->id));
+            }
+                        
             return $customer;        
         } catch (Exception $e) {
             $result = new stdClass();
@@ -308,7 +315,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
         try {                        
             $charge = $this->openpayRequest('customers/'.$customer->id.'/charges', 'POST', $charge_request);
 
-            $this->load->model('extension/payment/openpay_cards');
+            $this->load->model('extension/payment/openpay_stores');
             $this->model_extension_payment_openpay_stores->addTransaction(array('type' => 'Charge creation', 'customer_ref' => $customer->id, 'charge_ref' => $charge->id, 'amount' => $charge->amount, 'status' => $charge->status));
 
             return $charge;       

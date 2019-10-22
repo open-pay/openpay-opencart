@@ -15,7 +15,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
     protected $refunded_status_id = 11;
 
     public function index() {
-        $this->load->model('checkout/order');   
+        $this->load->model('checkout/order');
         $this->language->load('extension/payment/openpay_cards');
 
         $data['action'] = $this->url->link('extension/payment/openpay_cards/confirm', '', true);
@@ -86,6 +86,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             return;
         }
 
+        $this->load->model('account/customer');
         $this->load->model('checkout/order');
         $this->language->load('extension/payment/openpay_cards');
         $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
@@ -99,7 +100,11 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         $amount = number_format((float)$order_info['total'], 2, '.', '');
 
         $this->load->model('extension/payment/openpay_cards');
-        $customer = $this->model_extension_payment_openpay_cards->getCustomer($this->customer->getId());
+        
+        $customer = false;
+        if ($this->customer->isLogged()) {
+            $customer = $this->model_extension_payment_openpay_cards->getCustomer($this->customer->getId());
+        }
 
         if ($customer == false) {
             $this->log->write("Create Openapy Customer");
@@ -249,8 +254,6 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             $comment = 'En espera de confirmación 3D Secure';
             $notify = false;
         }                
-        
-        $this->load->model('checkout/order'); 
             
         $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $status_id, $comment, $notify);
         $this->model_extension_payment_openpay_cards->addOrder(array(
@@ -352,9 +355,13 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         try {            
             $customer = $this->openpayRequest('customers', 'POST', $customer_data);
 
+            $this->load->model('account/customer');            
             $this->load->model('extension/payment/openpay_cards');
-            $this->model_extension_payment_openpay_cards->addTransaction(array('type' => 'Customer creation', 'customer_ref' => $customer->id));
-            $this->model_extension_payment_openpay_cards->addCustomer(array('customer_id' => $oc_customer_id, 'openpay_customer_id' => $customer->id));
+            
+            if ($this->customer->isLogged()) {                
+                $this->model_extension_payment_openpay_cards->addCustomer(array('customer_id' => $oc_customer_id, 'openpay_customer_id' => $customer->id));
+            }
+            
             return $customer;        
         } catch (Exception $e) {
             $result = new stdClass();
