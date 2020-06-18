@@ -292,7 +292,8 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');        
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+        curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CARTMX/v2");         
         $result = curl_exec($ch);
         curl_close($ch);
 
@@ -323,7 +324,8 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);        
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CARTMX/v2");         
                 
         if ($params !== null) {            
             $data_string = json_encode($params);

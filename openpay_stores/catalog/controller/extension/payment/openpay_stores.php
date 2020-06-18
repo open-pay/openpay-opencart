@@ -189,7 +189,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
     public function webhook() {
         $objeto = file_get_contents('php://input');
         $this->log->write('#webhook => '.$objeto);
-        $this->log->write($objeto);
+        $json = json_decode($objeto);
 
         if(!$json) {
             return true;
@@ -200,7 +200,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
             return;
         }
 
-        if ($json->type == 'charge.succeeded' && $charge->method == 'bank_account') {
+        if ($json->type == 'charge.succeeded' && $charge->method == 'store') {
             $comment = 'Pago recibido.';
             $notify = true;
             $this->load->model('checkout/order');
@@ -227,7 +227,8 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);        
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CARTMX/v2");        
                 
         if ($params !== null) {            
             $data_string = json_encode($params);
