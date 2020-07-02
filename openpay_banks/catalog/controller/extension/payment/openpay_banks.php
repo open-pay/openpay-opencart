@@ -199,16 +199,21 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
             return true;
         }
         
-        $charge = $this->getOpenpayCharge($json->transaction->id);        
-        if ($charge->status !== 'completed') {
-            return;
-        }
-        
-        if ($json->type == 'charge.succeeded' && $charge->method == 'bank_account') {
-            $comment = 'Pago recibido.';
-            $notify = true;
-            $this->load->model('checkout/order');
-            $this->model_checkout_order->addOrderHistory($charge->order_id, $this->config->get('payment_openpay_banks_order_status_id'), $comment, $notify);
+        $charge = $this->getOpenpayCharge($json->transaction->id);
+
+        if ($charge->method == 'bank_account') {
+            if ($json->type == 'charge.succeeded' && $charge->status == 'completed') {
+                $comment = 'Pago recibido.';
+                $notify = true;
+                $this->load->model('checkout/order');
+                $this->model_checkout_order->addOrderHistory($charge->order_id, $this->config->get('payment_openpay_banks_order_status_id'), $comment, $notify);
+            }else if($json->type == 'transaction.expired' && $charge->status == 'cancelled'){
+                $comment = 'Pago vencido.';
+                $notify = true;
+                $expired_status_id = 14;
+                $this->load->model('checkout/order');
+                $this->model_checkout_order->addOrderHistory($charge->order_id, $expired_status_id , $comment, $notify);
+            }
         }
     }
     

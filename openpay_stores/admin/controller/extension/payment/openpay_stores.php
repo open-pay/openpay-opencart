@@ -225,7 +225,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
             $protocol = (isset($this->request->server['HTTPS']) && (($this->request->server['HTTPS'] == 'on') || ($this->request->server['HTTPS'] == '1'))) ? 'https://' : 'http://';            
             $webhook_data = array(
                 'url' =>  $protocol.$_SERVER['HTTP_HOST'].'/index.php?route=extension/payment/openpay_stores/webhook',
-                'event_types' => array("verification","charge.succeeded","charge.created","charge.cancelled","charge.failed")
+                'event_types' => array("verification","charge.succeeded","charge.created","charge.cancelled","charge.failed","transaction.expired")
             );
                         
             try {
