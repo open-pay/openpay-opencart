@@ -217,7 +217,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         }
         
         $charge = $this->getOpenpayCharge($this->request->get['id']);        
-        if ($charge->status !== 'completed') {
+        if (!isset($charge->status) || $charge->status !== 'completed') {
             $failed_status_id = 10;                        
             $comment = 'Validación con 3D Secure fallida';
             $notify = true;
@@ -628,9 +628,13 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         $this->log->write('#eventAddOrderHistory Event fired: ' . $route);        
         $this->log->write('Input json_encode => '.json_encode($args));   
         
-        $order_status_id = (int) $args[1]; 
-        $comment = $args[2];        
+        $order_status_id = (int) $args[1];
+        $comment = "";
         
+        if(isset($args[2])){
+            $comment = $args[2];   
+        }
+
         $this->load->model('extension/payment/openpay_cards');
         $openpay_order = $this->model_extension_payment_openpay_cards->getOrder($order_id);
         
