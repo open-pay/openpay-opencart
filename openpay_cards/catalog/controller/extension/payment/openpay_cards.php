@@ -216,8 +216,21 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             $this->response->redirect($this->url->link('common/home', '', true));
         }
         
-        $charge = $this->getOpenpayCharge($this->request->get['id']);        
-        if (!isset($charge->status) || $charge->status !== 'completed') {
+        $charge = $this->getOpenpayCharge($this->request->get['id']);
+
+        if (isset($charge->error_code)) {
+            $failed_status_id = 10;                        
+            $comment = $charge->error;
+            $notify = true;
+            
+            $this->load->model('checkout/order');        
+            $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $failed_status_id, $comment, $notify);
+            
+            $this->clearCart();
+            $this->response->redirect($this->url->link('checkout/failure', '', true));
+        }
+        
+        if ($charge->status !== 'completed') {
             $failed_status_id = 10;                        
             $comment = 'Validación con 3D Secure fallida';
             $notify = true;
@@ -225,9 +238,8 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             $this->load->model('checkout/order');        
             $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $failed_status_id, $comment, $notify);
             
-            //$this->session->data['error'] = 'Pago fallido.';
             $this->clearCart();
-            $this->response->redirect($this->url->link('account/order', '', true));
+            $this->response->redirect($this->url->link('checkout/failure', '', true));
         }               
         
         $this->load->model('extension/payment/openpay_cards');
@@ -479,6 +491,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             return $this->openpayRequest('charges/'.$trx_id, 'GET');            
         } catch (Exception $e) {            
             $result = new stdClass();
+            $result->error_code = $e->getCode();
             $result->error = $this->error($e->getCode());
             return $result;
         }        
