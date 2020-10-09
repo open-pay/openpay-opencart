@@ -57,8 +57,10 @@ $_[ 'entry_live_merchant_id' ]              = 'Live Merchant ID';
 $_[ 'entry_test_secret_key' ]              = 'Test Secret Key';
 $_[ 'entry_live_secret_key' ]              = 'Live Secret Key';
 $_[ 'entry_mode' ]                = 'Transaction Mode';
+$_[ 'entry_country' ]                = 'Country';
 $_[ 'entry_method' ]              = 'Transaction Method';
 $_[ 'entry_total' ]               = 'Total';
+$_[ 'entry_iva' ]               = 'IVA';
 $_[ 'entry_order_status' ]        = 'Order Status';
 $_[ 'entry_geo_zone' ]            = 'Geo Zone'; 
 $_[ 'entry_status' ]              = 'Status';
@@ -73,6 +75,7 @@ $_[ 'entry_deadline' ] = 'Deadline to pay (hours)';
 //help
 $_[ 'help_title' ] = 'Caption, which will appear on Checkout';
 $_[ 'help_total' ] = 'Minimum total amount of an order. (No less then %s)';
+$_[ 'help_iva' ] = 'It must contain the IVA value, is only informative field, has not effect on the amount field.';
 $_[ 'help_charge' ] = 'With One Step Payment on checkout occurs Authorization and Charge, with Two Step Payment - Authorization only';
 
 // Error 

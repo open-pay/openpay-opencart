@@ -61,12 +61,14 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         }
 
         $data['months_interest_free'] = $this->getMonthsInterestFree();
+        $data['installments'] = $this->getInstallments();
         $data['use_card_points'] = $this->useCardPoints();
         $data['save_cc'] = $this->canSaveCC() && $this->customer->isLogged();                
         $data['cc_options'] = $this->getCreditCardList();
 
         $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
         $data['total'] = $order_info['total'];
+        $data['country'] = $this->getCountry();
 
         return $this->load->view('extension/payment/openpay_cards', $data);
     }
@@ -114,8 +116,13 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
                 'name' => $order_info['payment_firstname'],
                 'last_name' => $order_info['payment_lastname'],
                 'email' => $order_info['email'],
+                'phone_number' => $order_info['telephone'],
                 'requires_account' => false
             );
+
+            if ($this->validateAddress($order_info)) {
+                $customer_data = $this->formatAddress($customer_data, $order_info);
+            }
 
             $customer = $this->createOpenpayCustomer($customer_data, $this->customer->getId());
 
@@ -136,6 +143,8 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         $capture_config = $this->config->get('payment_openpay_cards_capture')  === null ? '1' : $this->config->get('payment_openpay_cards_capture');
         $capture = $capture_config === '1' ? true : false;
         $this->log->write('$capture => '.json_encode($capture));
+
+        $country = $this->config->get('payment_openpay_cards_country');
         
         $charge_request = array(
             'method' => 'card',
@@ -149,11 +158,19 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             'capture' => $capture == '1' ? true : false
         );
 
-        if (isset($this->request->post['interest_free']) && $this->request->post['interest_free'] > 1) {
+        if ($country === 'CO') {
+            $charge_request['iva'] = $this->config->get('payment_openpay_cards_iva');;
+        }
+
+        if (isset($this->request->post['interest_free']) && $this->request->post['interest_free'] > 1 && $country === 'MX') {
             $charge_request['payment_plan'] = array('payments' => (int) $this->request->post['interest_free']);
         }
+
+        if (isset($this->request->post['installments']) && $this->request->post['installments'] > 1 && $country === 'CO') {
+            $charge_request['payment_plan'] = array('payments' => (int) $this->request->post['installments']);
+        }
         
-        if ($this->config->get('payment_openpay_cards_charge_type') == '3d') {
+        if ($this->config->get('payment_openpay_cards_charge_type') == '3d' && $this->country === 'MX') {
             $charge_request['use_3d_secure'] = true;
             $charge_request['redirect_url'] = $this->config->get('config_url').'index.php?route=extension/payment/openpay_cards/confirm3d';            
         }      
@@ -204,6 +221,28 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             $json['success'] = $this->url->link('checkout/success', '', true);
             $this->response->setOutput(json_encode($json));
         }        
+    }
+
+    private function formatAddress($customer_data, $order_info) {
+        $country = $this->getCountry();
+        if ($country === 'MX') {
+            $customer_data['address'] = array(
+                'line1' => $order_info['payment_address_1'],
+                'line2' => $order_info['payment_address_2'],
+                'postal_code' => $order_info['payment_postcode'],
+                'city' => $order_info['payment_city'],
+                'state' => $order_info['payment_zone'],
+                'country_code' => 'MX'
+            );
+        } else if ($country === 'CO') {
+            $customer_data['customer_address'] = array(
+                'department' => $order_info['payment_zone'],
+                'city' => $order_info['payment_city'],
+                'additional' => $order_info['payment_address_1'].' '.$order_info['payment_address_2']
+            );
+        }
+        
+        return $customer_data;
     }
     
     /**
@@ -291,6 +330,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
      * @param array $params
      */
     private function openpayRequest($resource, $method, $params = null) {
+        $country = $this->getCountry();
         $abs_url = $this->getApiBaseUrl().'/'.$this->getMerchantId().'/';
         $abs_url .= $resource;
 
@@ -303,7 +343,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CARTMX/v2");        
+        curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CART".$country."/v2");        
                 
         if ($params !== null) {            
             $data_string = json_encode($params);
@@ -328,22 +368,27 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
     }
     
     private function getMerchantId() {
-        if ($this->config->get('payment_openpay_cards_test_mode')) {
+        if ($this->config->get('payment_openpay_cards_mode')) {
             return $this->config->get('payment_openpay_cards_test_merchant_id');
         }
         return $this->config->get('payment_openpay_cards_live_merchant_id');
     }
     
     private function getApiBaseUrl() {
-        if ($this->isTestMode()) {
-            return 'https://sandbox-api.openpay.mx/v1';
-        } else {
-            return 'https://api.openpay.mx/v1';
+        $country = $this->getCountry();
+        if($country === 'MX'){
+            return $this->isTestMode() ? 'https://sandbox-api.openpay.mx/v1' : 'https://api.openpay.mx/v1';
+        }else if($country === 'CO'){
+            return $this->isTestMode() ? 'https://sandbox-api.openpay.co/v1' : 'https://api.openpay.co/v1';
         }
     }
-    
+
+    private function getCountry(){
+        return $this->config->get('payment_openpay_cards_country');
+    }
+
     private function isTestMode() {
-        if ($this->config->get('payment_openpay_cards_test_mode') == '1') {
+        if ($this->config->get('payment_openpay_cards_mode') == '1') {
             return true;
         } else {
             return false;
@@ -351,14 +396,14 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
     }
 
     private function getSecretApiKey() {
-        if ($this->config->get('payment_openpay_cards_test_mode')) {
+        if ($this->config->get('payment_openpay_cards_mode')) {
             return $this->config->get('payment_openpay_cards_test_secret_key');
         }
         return $this->config->get('payment_openpay_cards_live_secret_key');
     }
 
     private function getPublicApiKey() {
-        if ($this->config->get('payment_openpay_cards_test_mode')) {
+        if ($this->config->get('payment_openpay_cards_mode')) {
             return $this->config->get('payment_openpay_cards_test_public_key');
         }
         return $this->config->get('payment_openpay_cards_live_public_key');
@@ -599,6 +644,14 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             return array();
         }
     }
+
+    private function getInstallments(){
+        if ($this->config->get('payment_openpay_cards_installments')) {
+            return $this->config->get('payment_openpay_cards_installments');
+        } else {
+            return array();
+        }
+    }
     
     private function useCardPoints() {
         return $this->config->get('payment_openpay_cards_use_card_points');
@@ -696,6 +749,16 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
 //            $this->response->setOutput(json_encode(array('error' => 'ERROR - '.$e->getMessage())));    
             throw $e;
         }              
+    }
+
+    public function validateAddress($order_info) {
+        $country = $this->getCountry();
+        if ($country === 'MX' && $order_info['payment_address_1'] && $order_info['payment_city'] && $order_info['payment_postcode'] && $order_info['payment_zone']) {
+            return true;
+        } else if ($country === 'CO' && $order_info['payment_address_1'] && $order_info['payment_city'] && $order_info['payment_zone']) {
+            return true;
+        }
+        return false;
     }
 
 }

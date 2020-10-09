@@ -8,6 +8,8 @@ if (!defined('OWNER'))
 
 class ControllerExtensionPaymentOpenpayStores extends Controller {
     
+    private $error = array(); // This is used to set the errors, if any.
+    
     public function index() {
         $min_total = 1;
         $this->language->load('extension/payment/openpay_stores');
@@ -20,7 +22,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
             $setting = $this->model_setting_setting->getSetting('payment_openpay_stores');
             $this->merge($setting, $this->request->post, true);
             
-            $mode = $this->request->post['payment_openpay_stores_test_mode'] ? 'test' : 'live';            
+            $mode = $this->request->post['payment_openpay_stores_mode'] ? 'test' : 'live';            
             $webhook = $this->createWebhook($mode);
             if(!isset($webhook->error) && $webhook !== false){
                 $setting['payment_openpay_stores_'.$mode.'_webhook'] = $webhook->id;
@@ -99,6 +101,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
         $data['text_form'] = $this->language->get('text_form');
 
         $data['entry_mode'] = $this->language->get('entry_mode');
+        $data['entry_country'] = $this->language->get('entry_country');
         $data['entry_method'] = $this->language->get('entry_method');
         $data['entry_total'] = $this->language->get('entry_total');
         $data['entry_order_status'] = $this->language->get('entry_order_status');        
@@ -108,10 +111,13 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
         $data['entry_captured_status'] = $this->language->get('entry_captured_status');
         $data['entry_completed_status'] = $this->language->get('entry_completed_status');            
 
+        $data['entry_iva'] = $this->language->get('entry_iva');
+
         $data['button_save'] = $this->language->get('button_save');
         $data['button_cancel'] = $this->language->get('button_cancel');
 
         $data['help_title'] = $this->language->get('help_title');
+        $data['help_iva'] = $this->language->get('help_iva');
         $data['help_total'] = sprintf($this->language->get('help_total'), $this->currency->format($min_total, $this->config->get('config_currency')));
         $data['help_charge'] = $this->language->get('help_charge');
 
@@ -137,9 +143,10 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
         $data['payment_openpay_stores_test_secret_key'] = $this->fillSetting('payment_openpay_stores_test_secret_key');        
         $data['payment_openpay_stores_live_secret_key'] = $this->fillSetting('payment_openpay_stores_live_secret_key');
         $data['payment_openpay_stores_deadline'] = $this->fillSetting('payment_openpay_stores_deadline');
-        $data['payment_openpay_stores_test_mode'] = $this->fillSetting('payment_openpay_stores_test_mode');        
+        $data['payment_openpay_stores_mode'] = $this->fillSetting('payment_openpay_stores_mode');        
         $data['payment_openpay_stores_order_status_id'] = $this->fillSetting('payment_openpay_stores_order_status_id');
         $data['payment_openpay_stores_title'] = $this->fillSetting('payment_openpay_stores_title', $this->language->get('text_title'));
+        $data['payment_openpay_stores_iva'] = $this->fillSetting('payment_openpay_stores_iva', 0);
 
         $this->load->model('localisation/order_status');
 
@@ -156,6 +163,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
         $data['payment_openpay_stores_geo_zone_id'] = $this->fillSetting('payment_openpay_stores_geo_zone_id');
         
         $data['show_map'] = $this->fillSetting('payment_openpay_stores_show_map', '0');
+        $data['country'] = $this->fillSetting('payment_openpay_stores_country', 'MX');
 
         $data['header'] = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
@@ -169,8 +177,8 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
         if (!$this->user->hasPermission('modify', 'extension/payment/openpay_stores')) {
             $this->error['warning'] = $this->language->get('error_permission');
         }
-        
-        if ($this->request->post['payment_openpay_stores_test_mode']) {
+        $country = $this->request->post['payment_openpay_stores_country'];
+        if ($this->request->post['payment_openpay_stores_mode']) {
             
             if (empty($this->request->post['payment_openpay_stores_test_merchant_id'])) {
                 $this->error['test_merchant_id'] = $this->language->get('error_test_merchant_id');
@@ -180,7 +188,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
                 $this->error['test_secret_key'] = $this->language->get('error_test_secret_key');
             }            
             
-            if(!$this->getMerchantInfo($this->request->post['payment_openpay_stores_test_merchant_id'], $this->request->post['payment_openpay_stores_test_secret_key'], $this->request->post['payment_openpay_stores_test_mode'])){
+            if(!$this->getMerchantInfo($this->request->post['payment_openpay_stores_test_merchant_id'], $this->request->post['payment_openpay_stores_test_secret_key'], $this->request->post['payment_openpay_stores_mode'], $country)){
                 $this->error['test_merchant_account'] = $this->language->get('error_test_merchant_account');                
             }
             
@@ -194,7 +202,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
                 $this->error['live_secret_key'] = $this->language->get('error_live_secret_key');
             }            
             
-            if(!$this->getMerchantInfo($this->request->post['payment_openpay_stores_live_merchant_id'], $this->request->post['payment_openpay_stores_live_secret_key'], $this->request->post['payment_openpay_stores_test_mode'])){
+            if(!$this->getMerchantInfo($this->request->post['payment_openpay_stores_live_merchant_id'], $this->request->post['payment_openpay_stores_live_secret_key'], $this->request->post['payment_openpay_stores_mode'], $country)){
                 $this->error['live_merchant_account'] = $this->language->get('error_live_merchant_account');
             }
             
@@ -264,11 +272,14 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
         }
     }
 
-    private function getMerchantInfo($id, $sk, $mode) {
-        $sandbox_url = "https://sandbox-api.openpay.mx/v1";
-        $live_url = "https://api.openpay.mx/v1";
+    private function getMerchantInfo($id, $sk, $mode, $country) {
+        if($country === 'MX'){
+            $url_base = $mode ? "https://sandbox-api.openpay.mx/v1" : "https://api.openpay.mx/v1";
+        }else if($country === 'CO'){
+            $url_base = $mode ? "https://sandbox-api.openpay.co/v1" : "https://api.openpay.co/v1";
+        }
 
-        $url = ($mode ? $sandbox_url : $live_url)."/".trim($id);
+        $url = $url_base."/".trim($id);
 
         $username = trim($sk);
         $password = "";        
@@ -279,7 +290,6 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-        curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CARTMX/v2"); 
 
         $result = curl_exec($ch);
         curl_close($ch);
@@ -300,6 +310,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
      * @param array $params
      */
     private function openpayRequest($resource, $method, $params = null) {
+        $country = $this->getCountry();
         $abs_url = $this->getApiBaseUrl().'/'.$this->getMerchantId().'/';
         $abs_url .= $resource;
 
@@ -312,7 +323,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CARTMX/v2");         
+        curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CART".$country."/v2");         
                 
         if ($params !== null) {            
             $data_string = json_encode($params);
@@ -337,22 +348,27 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
     }
     
     private function getMerchantId() {
-        if ($this->config->get('payment_openpay_stores_test_mode')) {
+        if ($this->config->get('payment_openpay_stores_mode')) {
             return $this->config->get('payment_openpay_stores_test_merchant_id');
         }
         return $this->config->get('payment_openpay_stores_live_merchant_id');
     }
     
     private function getApiBaseUrl() {
-        if ($this->isTestMode()) {
-            return 'https://sandbox-api.openpay.mx/v1';
-        } else {
-            return 'https://api.openpay.mx/v1';
+        $country = $this->getCountry();
+        if($country === 'MX'){
+            return $this->isTestMode() ? 'https://sandbox-api.openpay.mx/v1' : 'https://api.openpay.mx/v1';
+        }else if($country === 'CO'){
+            return $this->isTestMode() ? 'https://sandbox-api.openpay.co/v1' : 'https://api.openpay.co/v1';
         }
+    }
+
+    private function getCountry(){
+        return $this->config->get('payment_openpay_stores_country');
     }
     
     private function isTestMode() {
-        if ($this->config->get('payment_openpay_stores_test_mode') == '1') {
+        if ($this->config->get('payment_openpay_stores_mode') == '1') {
             return true;
         } else {
             return false;
@@ -360,7 +376,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
     }
 
     private function getSecretApiKey() {
-        if ($this->config->get('payment_openpay_stores_test_mode')) {
+        if ($this->config->get('payment_openpay_stores_mode')) {
             return $this->config->get('payment_openpay_stores_test_secret_key');
         }
         return $this->config->get('payment_openpay_stores_live_secret_key');

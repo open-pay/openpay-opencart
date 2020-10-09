@@ -10,13 +10,19 @@
             </div>            
         </div>
 
-        <div class="row mb20">                        
-            <div class="col-md-4">                                    
-                <img src="https://openpay-plugins-screenshots.s3.amazonaws.com/tarjetas_2x.png" alt="Tarjetas" class="tiendas">
-            </div>
-            <div class="col-md-12">                    
-                <img src="https://openpay-plugins-screenshots.s3.amazonaws.com/bancos_2x.png" alt="Tarjetas" class="tiendas">
-            </div>
+        <div class="row mb20">
+            {% if country == 'MX' %}                        
+                <div class="col-md-4">                                    
+                    <img src="https://openpay-plugins-screenshots.s3.amazonaws.com/tarjetas_2x.png" alt="Tarjetas" class="tiendas">
+                </div>
+                <div class="col-md-12">                    
+                    <img src="https://openpay-plugins-screenshots.s3.amazonaws.com/bancos_2x.png" alt="Tarjetas" class="tiendas">
+                </div>
+            {% else %}
+                <div class="col-md-4">                                    
+                    <img src="/catalog/view/theme/default/image/openpay_cards_co.png" alt="Tarjetas" class="tiendas">
+                </div>
+            {% endif %}
         </div>
 
         <div id="msgBox" role="alert"><i></i><span style="margin-left:10px;"></span></div>
@@ -95,7 +101,7 @@
             {% endif %}
         </div>    
         
-        {% if months_interest_free|length > 0 %}
+        {% if months_interest_free|length > 0 and  country == 'MX' %}
             <div class="form-group">
                 <label class="col-sm-2 control-label" for="cc-cvv">
                     Meses sin intereses
@@ -114,6 +120,27 @@
                 </div>
             </div>
         {% endif %}
+
+        {% if installments|length > 0 and country == 'CO' %}
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="cc-cvv">
+                    Cuotas
+                </label>
+                <div class="col-sm-2">
+                    <select id="installments" name="installments" class="form-control">
+                        <option value="">Pago de contado</option>                        
+                        {% for installment in installments %}
+                            <option value="{{ installment }}">{{ installment }} cuotas</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-sm-2 hidden" id="total-monthly-payment" >
+                    Pago mensual
+                    <p class="openpay-total">$<span id="monthly-payment"></span> COP</p>                    
+                </div>
+            </div>
+        {% endif %}
+
         <div class="form-group">
             <div class="col-sm-4 col-sm-offset-2">
                 <button type="submit" class="btn btn-primary" id="button-confirm" data-loading-text="Processing">{{ button_confirm }}</button>
@@ -150,8 +177,14 @@
         });
 
         if( typeof OpenPay === 'undefined' ){
-            var openpay_library = "https://openpay.s3.amazonaws.com/openpay.v1.min.js";
-            var openpay_anti_fraud = "https://openpay.s3.amazonaws.com/openpay-data.v1.min.js";
+            var country = '{{ country }}';
+            if(country === 'MX'){
+                var openpay_library = "https://openpay.s3.amazonaws.com/openpay.v1.min.js";
+                var openpay_anti_fraud = "https://openpay.s3.amazonaws.com/openpay-data.v1.min.js";
+            }else if(country === 'CO'){
+                var openpay_library = "https://resources.openpay.co/openpay.v1.min.js";
+                var openpay_anti_fraud = "https://resources.openpay.co/openpay-data.v1.min.js";
+            }
             createScriptTag(openpay_library);
             createScriptTag(openpay_anti_fraud);
         }

@@ -72,9 +72,13 @@ $_[ 'entry_ipn' ] = 'Webhook page';
 $_[ 'entry_completed_status' ] = 'Completed';
 $_[ 'entry_new_status' ] = 'Authorized';
 $_[ 'entry_title' ] = 'Title';
+$_[ 'entry_country' ] = 'Country';
+$_[ 'entry_iva' ] = 'IVA';
 
 //help
 $_[ 'help_title' ] = 'Caption, which will appear on Checkout';
+$_[ 'help_installments' ] = 'Presione ctrl y clic para seleccionar más de una opción.';
+$_[ 'help_iva' ] = 'Debe contener el valor de IVA, es campo solo informativo, no tiene ningún efecto sobre el campo amount.';
 $_[ 'help_total' ] = 'Minimum total amount of an order. (No less then %s)';
 $_[ 'help_charge' ] = 'With One Step Payment on checkout occurs Authorization and Charge, with Two Step Payment - Authorization only';
 $_[ 'help_cvc_front' ] = 'American Express presenta este código código de tres dígitos en la parte frontal de la tarjeta.';

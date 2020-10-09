@@ -8,6 +8,8 @@ if (!defined('OWNER'))
 
 class ControllerExtensionPaymentOpenpayCards extends Controller {
 
+    private $error = array(); // This is used to set the errors, if any.
+    
     public function index() {
         $min_total = 1;
         $this->language->load('extension/payment/openpay_cards');
@@ -119,10 +121,17 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
         $data['entry_completed_status'] = $this->language->get('entry_completed_status');        
         $data['entry_title'] = $this->language->get('entry_title');
 
+        // ADD
+
+        $data['entry_country'] = $this->language->get('entry_country');
+        $data['entry_iva'] = $this->language->get('entry_iva');
+
         $data['button_save'] = $this->language->get('button_save');
         $data['button_cancel'] = $this->language->get('button_cancel');
 
         $data['help_title'] = $this->language->get('help_title');
+        $data['help_installments'] = $this->language->get('help_installments');
+        $data['help_iva'] = $this->language->get('help_iva');
         $data['help_total'] = sprintf($this->language->get('help_total'), $this->currency->format($min_total, $this->config->get('config_currency')));
         $data['help_charge'] = $this->language->get('help_charge');
 
@@ -152,9 +161,10 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
         $data['payment_openpay_cards_test_secret_key'] = $this->fillSetting('payment_openpay_cards_test_secret_key');
         $data['payment_openpay_cards_live_public_key'] = $this->fillSetting('payment_openpay_cards_live_public_key');
         $data['payment_openpay_cards_live_secret_key'] = $this->fillSetting('payment_openpay_cards_live_secret_key');
-        $data['payment_openpay_cards_test_mode'] = $this->fillSetting('payment_openpay_cards_test_mode');
+        $data['payment_openpay_cards_mode'] = $this->fillSetting('payment_openpay_cards_mode');
         $data['payment_openpay_cards_order_status_id'] = $this->fillSetting('payment_openpay_cards_order_status_id');
         $data['payment_openpay_cards_title'] = $this->fillSetting('payment_openpay_cards_title', $this->language->get('text_title'));
+        $data['payment_openpay_cards_iva'] = $this->fillSetting('payment_openpay_cards_iva');
         
         $this->load->model('localisation/order_status');
 
@@ -180,7 +190,19 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
             $data['payment_openpay_cards_interest_free'] = $this->config->get('payment_openpay_cards_interest_free');        
         } else {
             $data['openpay_card_interest_free'] = array();
-        }        
+        } 
+        
+        /*
+         * Cuotas
+         */
+        $data['installments'] = $this->getInstallments();
+        if (isset($this->request->post['payment_openpay_cards_installments'])) {
+            $data['payment_openpay_cards_installments'] = $this->request->post['payment_openpay_cards_installments'];        
+        } elseif ($this->config->get('payment_openpay_cards_installments')) {
+            $data['payment_openpay_cards_installments'] = $this->config->get('payment_openpay_cards_installments');        
+        } else {
+            $data['payment_openpay_cards_installments'] = array();
+        } 
         
         // Tipo de cargo
         $data['charge_types'] = array('direct' => 'Directo', 'auth' => 'Autenticación selectiva', '3d' => '3D Secure'); 
@@ -191,6 +213,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
         
         $data['use_card_points'] = $this->fillSetting('payment_openpay_cards_use_card_points', '0'); 
         $data['capture'] = $this->fillSetting('payment_openpay_cards_capture', '1');
+        $data['country'] = $this->fillSetting('payment_openpay_cards_country', 'MX');
         $data['save_cc'] = $this->fillSetting('payment_openpay_cards_save_cc', '0');
         
         $data['header'] = $this->load->controller('common/header');
@@ -200,14 +223,23 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
         $this->response->setOutput($this->load->view('extension/payment/openpay_cards', $data));
     }
 
+    public function getInstallments() {
+        $installments = [];
+        for($i=2; $i <= 36; $i++) {
+            $installments[$i] = $i.' cuotas';
+        }
+        
+        return $installments;
+    }
+
     protected function validate() {
         $min_total = 1;
         //$this->model_setting_event->addEvent('openpay_cards_add_order', 'catalog/model/checkout/order/addOrderHistory/after', 'extension/payment/openpay_cards/eventAddOrderHistory');
         if (!$this->user->hasPermission('modify', 'extension/payment/openpay_cards')) {
             $this->error['warning'] = $this->language->get('error_permission');
         }
-
-        if ($this->request->post['payment_openpay_cards_test_mode']) {
+        $country = $this->request->post['payment_openpay_cards_country'];
+        if ($this->request->post['payment_openpay_cards_mode']) {
             if (empty($this->request->post['payment_openpay_cards_test_merchant_id'])) {
                 $this->error['test_merchant_id'] = $this->language->get('error_test_merchant_id');
             }
@@ -219,7 +251,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
                 $this->error['test_public_key'] = $this->language->get('error_test_public_key');
             }
 
-            if(!$this->getMerchantInfo($this->request->post['payment_openpay_cards_test_merchant_id'], $this->request->post['payment_openpay_cards_test_secret_key'], $this->request->post['payment_openpay_cards_test_mode'])){
+            if(!$this->getMerchantInfo($this->request->post['payment_openpay_cards_test_merchant_id'], $this->request->post['payment_openpay_cards_test_secret_key'], $this->request->post['payment_openpay_cards_mode'], $country)){
                 $this->error['test_merchant_account'] = $this->language->get('error_test_merchant_account');
             }
 
@@ -235,7 +267,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
                 $this->error['live_public_key'] = $this->language->get('error_live_public_key');
             }
 
-            if(!$this->getMerchantInfo($this->request->post['payment_openpay_cards_live_merchant_id'], $this->request->post['payment_openpay_cards_live_secret_key'], $this->request->post['payment_openpay_cards_test_mode'])){
+            if(!$this->getMerchantInfo($this->request->post['payment_openpay_cards_live_merchant_id'], $this->request->post['payment_openpay_cards_live_secret_key'], $this->request->post['payment_openpay_cards_mode'], $country)){
                 $this->error['live_merchant_account'] = $this->language->get('error_live_merchant_account');
             }
         }
@@ -283,11 +315,14 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
         return isset($this->request->post[$setting_name]) ? trim($this->request->post[$setting_name]) : ( $this->config->has($setting_name) ? trim($this->config->get($setting_name)) : $default );
     }
 
-    private function getMerchantInfo($id, $sk, $mode) {
-        $sandbox_url = "https://sandbox-api.openpay.mx/v1";
-        $live_url = "https://api.openpay.mx/v1";
+    private function getMerchantInfo($id, $sk, $mode, $country) {
+        if($country === 'MX'){
+            $url_base = $mode ? "https://sandbox-api.openpay.mx/v1" : "https://api.openpay.mx/v1";
+        }else if($country === 'CO'){
+            $url_base = $mode ? "https://sandbox-api.openpay.co/v1" : "https://api.openpay.co/v1";
+        }
 
-        $url = ($mode ? $sandbox_url : $live_url)."/".trim($id);
+        $url = $url_base."/".trim($id);
 
         $username = trim($sk);
         $password = "";        
@@ -298,7 +333,6 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-        curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CARTMX/v2");
                   
         $result = curl_exec($ch);
         curl_close($ch);

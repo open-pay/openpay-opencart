@@ -3,12 +3,16 @@
 <div id="msgBox" role="alert"><i></i><span style="margin-left:10px;"></span></div>
 <div class="content" id="payment">
     
-    <h2>Pago en Tiendas de Conveniencia</h2>
+    <h2>Pago en Tiendas</h2>
     <div class="mb20">
+      {% if country == 'MX' %}
         <img src="https://openpay-plugins-screenshots.s3.amazonaws.com/openpay_stores.png" alt="Tiendas" class="tiendas">
+      {% else %}
+        <img src="/catalog/view/theme/default/image/openpay_stores_co.png" alt="Tiendas" class="tiendas">
+      {% endif %}
     </div>
     <div class="well">
-        Una vez que des clic en el botón <strong>Confirmar Orden</strong>, tu pedido será puesto en <strong>Espera de pago</strong>, deberás de imprimir tu recibo pago el cual podrás liquidar en cualquiera de las tiendas participantes. <br><a href="http://www.openpay.mx/tiendas-de-conveniencia.html" target="_blank">Ver todas las tiendas</a>.
+        Una vez que des clic en el botón <strong>Confirmar Orden</strong>, tu pedido será puesto en <strong>Espera de pago</strong>, deberás de imprimir tu recibo pago el cual podrás liquidar en cualquiera de las tiendas participantes. <br> <a href="{% if country == 'MX' %} http://www.openpay.mx/tiendas-de-conveniencia.html {% else %} https://www.openpay.co/tiendas/ {% endif %}" target="_blank">Ver todas las tiendas</a>.
     </div>
     
     <div class="pull-right">
