@@ -11,10 +11,10 @@ class ModelExtensionPaymentOpenpayStores extends OpenpayModel {
         
         $this->log->write('#ModelExtensionPaymentOpenpayStores config_currency => '.$this->config->get('config_currency'));
         
-        // Método de pago disponible únicamente para MXN        
-        if ($this->config->get('config_currency') != 'MXN') {
+        // Validación de Currency 
+        if (!$this->validateCurrency($this->config->get('config_currency'))) {
             return array();
-        }                   
+        }                
         
         // Si la venta es mayor a $10,000 MXN el método no es mostrado
         if ($total >= 10000) {
@@ -45,6 +45,16 @@ class ModelExtensionPaymentOpenpayStores extends OpenpayModel {
         }
 
         return $method_data;
+    }
+
+    public function validateCurrency($currencyCode) {
+        $country = $this->config->get('payment_openpay_stores_country');        
+        if ($country === 'MX') {
+            return $currencyCode == 'MXN';
+        } else if ($country === 'CO') {
+            return $currencyCode == 'COP';
+        }
+        return false;
     }
 
 }

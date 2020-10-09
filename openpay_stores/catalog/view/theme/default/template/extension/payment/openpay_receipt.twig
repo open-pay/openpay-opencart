@@ -11,7 +11,11 @@
         {% if show_map %}    
             <div class="col-lg-8 col-lg-offset-2" style="margin-top: 20px; margin-bottom: 20px; ">
                 <h2>Mapa de tiendas</h2>
-                <iframe src="https://www.paynet.com.mx/mapa-tiendas/index.html?locationNotAllowed=true&postalCode={{ postcode }}" style="border: 1px solid #000; width:100%; height:300px;" frameborder="0"></iframe>                                
+                {% if country == 'MX' %}    
+                    <iframe src="https://www.paynet.com.mx/mapa-tiendas/index.html?locationNotAllowed=true&postalCode={{ postcode }}" style="border: 1px solid #000; width:100%; height:300px;" frameborder="0"></iframe>                                
+                {% else %}
+                    <iframe src="https://docs.openpay.co/docs/mapa-de-tiendas.html?locationNotAllowed=true&address={{ address }}" style="border: 1px solid #000; width:100%; height:300px;" frameborder="0"></iframe>
+                {% endif %}
             </div>
         {% endif %}    
         
@@ -28,4 +32,3 @@
         });
     });
 </script>
-

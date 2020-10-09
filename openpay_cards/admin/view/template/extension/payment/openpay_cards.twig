@@ -46,13 +46,26 @@
                                 <label class="col-sm-2 control-label" for="radio-test-mode">{{ text_test_mode }}</label>
                                 <div class="col-sm-10">                                    
                                     <label class="radio-inline">
-                                        <input id="radio-test-mode" type="radio" name="payment_openpay_cards_test_mode" value="0" {% if not payment_openpay_cards_test_mode %} checked {% endif %} >{{ text_no }}
+                                        <input id="radio-test-mode" type="radio" name="payment_openpay_cards_mode" value="0" {% if not payment_openpay_cards_mode %} checked {% endif %} >{{ text_no }}
                                     </label>
                                     <label class="radio-inline">
-                                        <input type="radio" name="payment_openpay_cards_test_mode" value="1" {% if payment_openpay_cards_test_mode %} checked {% endif %}>{{ text_yes }}
+                                        <input type="radio" name="payment_openpay_cards_mode" value="1" {% if payment_openpay_cards_mode %} checked {% endif %}>{{ text_yes }}
                                     </label>
                                 </div>
                             </div>
+
+                             <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-title" >
+                                    {{ entry_country }}
+                                </label>
+                                <div class="col-sm-10">                                                                     
+                                    <select name="payment_openpay_cards_country" id="country" class="form-control">
+                                        <option value="MX" {% if country == "MX" %} selected {% endif %}>México</option>                                        
+                                        <option value="CO" {% if country == "CO" %} selected {% endif %}>Colombia</option>                                        
+                                    </select>
+                                </div>
+                            </div>
+
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="input-test-merchant-id">
                                     {{ entry_test_merchant_id }}
@@ -203,7 +216,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="radio-test-mode">Months interest-free</label>
-                                <div class="col-sm-10">                                                                     
+                                <div class="col-sm-10" id="months_interest_free">                                                                     
                                     {% for key, month in months_interest_free %}    
                                         <label class="checkbox-inline">
                                             <input type="checkbox" name="payment_openpay_cards_interest_free[]" value="{{ key }}" {{ key in payment_openpay_cards_interest_free ? 'checked="checked"' : '' }}> {{ month }}
@@ -211,6 +224,38 @@
                                     {% endfor %}
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="radio-test-mode">Cuotas
+                                    <span class="glyphicon" data-toggle="popover" data-content="{{ help_installments }}" style="cursor:pointer;" >
+                                    </span>
+                                    </label>
+                                <div class="col-sm-10">
+                                    <select name="payment_openpay_cards_installments[]" id="payment_openpay_cards_installments" multiple class="form-control">
+                                         {% for key, installment in installments %}
+                                            <option value="{{ key }}" {{ key in payment_openpay_cards_installments ? 'selected="selected"' : '' }}>{{ installment }}</option>
+                                         {% endfor %}
+                                    </select>                                                                    
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-iva">
+                                    {{ entry_iva }}
+                                    <span class="glyphicon" data-toggle="popover" data-content="{{ help_iva }}" style="cursor:pointer;" ></span>
+                                </label>
+                                <div class="col-sm-10">
+                                    <div class="input-group">
+                                        {% if currency_symbol_left %}
+                                        <span class="input-group-addon">{{ currency_symbol_left }}</span>
+                                        {% endif %}
+                                        <input type="text" id="input-iva" class="form-control" name="payment_openpay_cards_iva" value="{{ payment_openpay_cards_iva }}" >
+                                        {% if currency_symbol_right %}
+                                        <span class="input-group-addon">{{ currency_symbol_right }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="payment_openpay_cards_charge_type">
                                     ¿Cómo procesar el cargo?
@@ -290,3 +335,4 @@
         template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="min-width:150px;"></div></div>'
     });
 </script>
+<script type="text/javascript" src="./view/javascript/openpay/openpay_cards.js"></script>

@@ -8,6 +8,12 @@ class ModelExtensionPaymentOpenpayCards extends OpenpayModel {
     public function getMethod($address, $total) {
 
         $this->language->load('extension/payment/openpay_cards');
+        $this->load->model('localisation/currency');
+
+        // Validación de Currency 
+        if (!$this->validateCurrency($this->config->get('config_currency'))) {
+            return array();
+        }
 
         $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "zone_to_geo_zone WHERE geo_zone_id = '" . (int) $this->config->get('payment_openpay_cards_geo_zone_id') . "' AND country_id = '" . (int) $address['country_id'] . "' AND (zone_id = '" . (int) $address['zone_id'] . "' OR zone_id = '0')");
 
@@ -35,6 +41,15 @@ class ModelExtensionPaymentOpenpayCards extends OpenpayModel {
         return $method_data;
     }
 
+    public function validateCurrency($currencyCode) {
+        $country = $this->config->get('payment_openpay_cards_country');        
+        if ($country === 'MX') {
+            return $currencyCode == 'MXN' || $currencyCode == 'USD';
+        } else if ($country === 'CO') {
+            return $currencyCode == 'COP';
+        }
+        return false;
+    }
 }
 
 ?>

@@ -1,0 +1,82 @@
+<link rel="stylesheet" type="text/css" href="/catalog/view/theme/default/stylesheet/openpay_pse.css">
+
+<div id="msgBox" role="alert"><i></i><span style="margin-left:10px;"></span></div>
+<div class="content" id="payment">
+    
+    <h2>Pago vía PSE</h2>
+    <div class="mb20">
+        <img src="/catalog/view/theme/default/image/openpay_pse_logo.png" alt="PSE" class="tiendas">
+    </div>
+    <div class="well">
+        Una vez que des clic en el botón <strong>Confirmar Orden</strong>, se procesará su pago a través de la plataforma Openpay.
+    </div>
+    
+    <div class="pull-right">
+            <button type="button" class="btn btn-primary" id="button-confirm" data-loading-text="Processing">{{ button_confirm }}</button>
+    </div>
+    
+</div>
+
+<script type="text/javascript">
+  $(document).ready(function(){
+    $('#button-confirm').click(function(event){
+        /* Prevent the form from submitting with the default action */
+        event.preventDefault();
+        
+        $("#button-confirm").button( 'loading' );
+        addMsg( '{{ text_wait }}' , 'warning' );
+
+        submitAjaxForm();
+        return false;
+    });
+
+    function addMsg( msg , type ){
+        var $msgBox = $('#msgBox');
+
+        $msgBox[ 0 ].className =  'alert alert-' + type;
+        $msgBox.find( 'span' ).text( msg );
+
+        var className = '';
+        switch( type ){
+            case 'danger' :
+                    className = 'fa-lg fa fa-exclamation-triangle';
+            break;
+            case 'warning' :
+                    className = 'fa fa-cog fa-spin urgent-2x';
+            break;
+            case 'success' :
+                    className = 'fa-2x fa fa-check';
+            break;
+        }
+        $msgBox.find( 'i' )[ 0 ].className = className;
+    }
+
+    function submitAjaxForm() {
+            var $form = $('#payment-form');
+            $.ajax({
+                url: '{{ action }}',
+                type: 'post',
+                data: $('#payment-form').serialize(),
+                dataType: 'json',
+                success: function (json, textStatus) {
+                    if( json.error ){
+                        addMsg( json.error , 'danger' );
+                        $form.find('button').button( 'reset' )
+                    } else if( json.success ){
+                        
+                        if (json.redirect === true) {
+                            window.location.replace(json.redirect_url);
+                        } else {
+                            $form.find('button').attr( 'disabled' , 'disabled' );
+                            addMsg( '{{ text_success_payment }}' , 'success' );
+                            setTimeout( function(){ document.location.assign( json.success ) } , 2000 );
+                        }
+                    }else{
+                        addMsg( '{{ error_error }}' , 'danger' );
+                    }
+                }
+            });
+        }
+          
+  });
+</script>

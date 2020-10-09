@@ -23,6 +23,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
 
         $data['button_confirm'] = $this->language->get('button_confirm');
         $data['button_back'] = $this->language->get('button_back');
+        $data['country'] = $this->getCountry();
 
         return $this->load->view('extension/payment/openpay_stores', $data);
     }
@@ -55,8 +56,13 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
                     'name' => $order_info['payment_firstname'],
                     'last_name' => $order_info['payment_lastname'],
                     'email' => $order_info['email'],
+                    'phone_number' => $order_info['telephone'],
                     'requires_account' => false
                 );
+
+                if ($this->validateAddress($order_info)) {
+                    $customer_data = $this->formatAddress($customer_data, $order_info);
+                }
 
                 $customer = $this->createOpenpayCustomer($customer_data, $this->customer->getId());
 
@@ -91,12 +97,17 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
 
                 $charge_request = array(
                     'method' => 'store',
-                    'currency' => 'mxn',
+                    'currency' => $this->config->get('config_currency'),
                     'amount' => $amount,
                     'description' => 'Order ID# '.$this->session->data['order_id'],
                     'order_id' => $this->session->data['order_id'],
                     'due_date' => $due_date
                 );
+
+                if ($this->getCountry() === 'CO') {
+                    $charge_request['iva'] = $this->config->get('payment_openpay_stores_iva');
+                }
+
                 $charge = $this->createOpenpayCharge($customer, $charge_request);
 
 
@@ -128,11 +139,16 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
 
             
             $data['pdf'] = $this->getPdfUrl($charge);
+            $data['country'] = $this->getCountry();
 
             $this->load->language('checkout/success');
-
+            $address_1 = isset($order_info['shipping_address_1']) ? $order_info['shipping_address_1'] : $order_info['payment_address_1'];
+            $address_2 = isset($order_info['shipping_address_2']) ? $order_info['shipping_address_2'] : $order_info['payment_address_2'];
+            $city = isset($order_info['shipping_city']) ? $order_info['shipping_city'] : $order_info['payment_city'];
+            $address =  $address_1.' '.$address_2.', '.$city;
             $data['show_map'] = $this->config->get('payment_openpay_stores_show_map') == '1' ? true : false;
             $data['postcode'] = isset($order_info['shipping_postcode']) ? $order_info['shipping_postcode'] : $order_info['payment_postcode'];
+            $data['address'] = $address;
             $data['continue'] = $this->url->link('common/home');
 
             $this->response->setOutput($this->load->view('extension/payment/openpay_receipt', $data));
@@ -142,7 +158,11 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
     }
     
     private function getPdfUrl($charge) {
-        $pdf_base_url = $this->isTestMode() ? 'https://sandbox-dashboard.openpay.mx/paynet-pdf': 'https://dashboard.openpay.mx/paynet-pdf';
+        $country = $this->getCountry();
+        $pdf_url_base_mx = $this->isTestMode() ? 'https://sandbox-dashboard.openpay.mx/paynet-pdf' : 'https://dashboard.openpay.mx/paynet-pdf';
+        $pdf_url_base_co = $this->isTestMode() ? 'https://sandbox-dashboard.openpay.co/paynet-pdf' : 'https://dashboard.openpay.co/paynet-pdf';    
+        $pdf_base_url = $country === 'MX' ? $pdf_url_base_mx : $pdf_url_base_co;
+
         return $pdf_base_url.'/'.$this->getMerchantId().'/'.$charge->payment_method->reference;
     }
 
@@ -221,6 +241,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
      * @param array $params
      */
     private function openpayRequest($resource, $method, $params = null) {
+        $country = $this->getCountry();
         $abs_url = $this->getApiBaseUrl().'/'.$this->getMerchantId().'/';
         $abs_url .= $resource;
 
@@ -233,7 +254,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CARTMX/v2");        
+        curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CART".$country."/v2");      
                 
         if ($params !== null) {            
             $data_string = json_encode($params);
@@ -258,22 +279,27 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
     }
     
     private function getMerchantId() {
-        if ($this->config->get('payment_openpay_stores_test_mode')) {
+        if ($this->config->get('payment_openpay_stores_mode')) {
             return $this->config->get('payment_openpay_stores_test_merchant_id');
         }
         return $this->config->get('payment_openpay_stores_live_merchant_id');
     }
     
     private function getApiBaseUrl() {
-        if ($this->isTestMode()) {
-            return 'https://sandbox-api.openpay.mx/v1';
-        } else {
-            return 'https://api.openpay.mx/v1';
+        $country = $this->getCountry();
+        if($country === 'MX'){
+            return $this->isTestMode() ? 'https://sandbox-api.openpay.mx/v1' : 'https://api.openpay.mx/v1';
+        }else if($country === 'CO'){
+            return $this->isTestMode() ? 'https://sandbox-api.openpay.co/v1' : 'https://api.openpay.co/v1';
         }
+    }
+
+    private function getCountry(){
+        return $this->config->get('payment_openpay_stores_country');
     }
     
     private function isTestMode() {
-        if ($this->config->get('payment_openpay_stores_test_mode') == '1') {
+        if ($this->config->get('payment_openpay_stores_mode') == '1') {
             return true;
         } else {
             return false;
@@ -281,12 +307,44 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
     }
 
     private function getSecretApiKey() {
-        if ($this->config->get('payment_openpay_stores_test_mode')) {
+        if ($this->config->get('payment_openpay_stores_mode')) {
             return $this->config->get('payment_openpay_stores_test_secret_key');
         }
         return $this->config->get('payment_openpay_stores_live_secret_key');
     }    
     
+    private function validateAddress($order_info) {
+        $country = $this->getCountry();
+        if ($country === 'MX' && $order_info['payment_address_1'] && $order_info['payment_city'] && $order_info['payment_postcode'] && $order_info['payment_zone']) {
+            return true;
+        } else if ($country === 'CO' && $order_info['payment_address_1'] && $order_info['payment_city'] && $order_info['payment_zone']) {
+            return true;
+        }
+        return false;
+    }
+
+    private function formatAddress($customer_data, $order_info) {
+        $country = $this->getCountry();
+        if ($country === 'MX') {
+            $customer_data['address'] = array(
+                'line1' => $order_info['payment_address_1'],
+                'line2' => $order_info['payment_address_2'],
+                'postal_code' => $order_info['payment_postcode'],
+                'city' => $order_info['payment_city'],
+                'state' => $order_info['payment_zone'],
+                'country_code' => 'MX'
+            );
+        } else if ($country === 'CO') {
+            $customer_data['customer_address'] = array(
+                'department' => $order_info['payment_zone'],
+                'city' => $order_info['payment_city'],
+                'additional' => $order_info['payment_address_1'].' '.$order_info['payment_address_2']
+            );
+        }
+        
+        return $customer_data;
+    }
+
     private function createOpenpayCustomer($customer_data, $oc_customer_id) {       
         try {            
             $customer = $this->openpayRequest('customers', 'POST', $customer_data);

@@ -47,11 +47,22 @@
                                 <label class="col-sm-2 control-label" for="radio-test-mode">Modo sandbox</label>
                                 <div class="col-sm-10">
                                     <label class="radio-inline">
-                                        <input id="radio-test-mode" type="radio" name="payment_openpay_stores_test_mode" value="0" {% if not payment_openpay_stores_test_mode %} checked {% endif %} >{{ text_no }}
+                                        <input id="radio-test-mode" type="radio" name="payment_openpay_stores_mode" value="0" {% if not payment_openpay_stores_mode %} checked {% endif %} >{{ text_no }}
                                     </label>
                                     <label class="radio-inline">
-                                        <input type="radio" name="payment_openpay_stores_test_mode" value="1" {% if payment_openpay_stores_test_mode %} checked {% endif %} >{{ text_yes }}
+                                        <input type="radio" name="payment_openpay_stores_mode" value="1" {% if payment_openpay_stores_mode %} checked {% endif %} >{{ text_yes }}
                                     </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-title" >
+                                    {{ entry_country }}
+                                </label>
+                                <div class="col-sm-10">                                                                     
+                                    <select name="payment_openpay_stores_country" id="stores_country" class="form-control">
+                                        <option value="MX" {% if country == "MX" %} selected {% endif %}>México</option>                                        
+                                        <option value="CO" {% if country == "CO" %} selected {% endif %}>Colombia</option>                                        
+                                    </select>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -185,6 +196,23 @@
                                 </div>
                             </div>
                             <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-iva">
+                                    {{ entry_iva }}
+                                    <span class="glyphicon" data-toggle="popover" data-content="{{ help_iva }}" style="cursor:pointer;" ></span>
+                                </label>
+                                <div class="col-sm-10">
+                                    <div class="input-group">
+                                        {% if currency_symbol_left %}
+                                        <span class="input-group-addon">{{ currency_symbol_left }}</span>
+                                        {% endif %}
+                                        <input type="text" id="input-iva" class="form-control" name="payment_openpay_stores_iva" value="{{ payment_openpay_stores_iva }}" >
+                                        {% if currency_symbol_right %}
+                                        <span class="input-group-addon">{{ currency_symbol_right }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
                                 <label class="col-sm-2 control-label" for="show_map">
                                     Mostrar mapa
                                     <span class="glyphicon" data-toggle="popover" data-content="Al seleccionar esta opción, un mapa se desplegará mostrando las tiendas más cercanas al momento mostrar el recipo de pago (https://www.openpay.mx/docs/stores-map.html)." data-html="true" style="cursor:pointer;" ></span>
@@ -226,3 +254,4 @@
         template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="min-width:150px;"></div></div>'
     });
 </script>
+<script type="text/javascript" src="./view/javascript/openpay/openpay_stores.js"></script>
