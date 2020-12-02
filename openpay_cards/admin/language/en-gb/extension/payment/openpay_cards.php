@@ -64,7 +64,7 @@ $_[ 'entry_order_status' ]        = 'Order Status';
 $_[ 'entry_cc_owner' ]       = 'Nombre del tarjetahabiente';
 $_[ 'entry_cc_number' ]      = 'Número de tarjeta';
 $_[ 'entry_cc_expire_date' ] = 'Fecha de expiración';
-$_[ 'entry_cc_cvv2' ]        = 'Código CVC';
+$_[ 'entry_cc_cvv2' ]        = 'Código CVV';
 $_[ 'entry_geo_zone' ]            = 'Geo Zone';
 $_[ 'entry_status' ]              = 'Status';
 $_[ 'entry_sort_order' ]          = 'Sort Order';
@@ -74,10 +74,11 @@ $_[ 'entry_new_status' ] = 'Authorized';
 $_[ 'entry_title' ] = 'Title';
 $_[ 'entry_country' ] = 'Country';
 $_[ 'entry_iva' ] = 'IVA';
+$_[ 'entry_affiliation_bbva' ] = 'BBVA affiliation number';
 
 //help
 $_[ 'help_title' ] = 'Caption, which will appear on Checkout';
-$_[ 'help_installments' ] = 'Presione ctrl y clic para seleccionar más de una opción.';
+$_[ 'help_installments' ] = 'Press ctrl and click to select more than one option.';
 $_[ 'help_iva' ] = 'Debe contener el valor de IVA, es campo solo informativo, no tiene ningún efecto sobre el campo amount.';
 $_[ 'help_total' ] = 'Minimum total amount of an order. (No less then %s)';
 $_[ 'help_charge' ] = 'With One Step Payment on checkout occurs Authorization and Charge, with Two Step Payment - Authorization only';
@@ -92,6 +93,8 @@ $_[ 'error_test_public_key' ]              = 'Test Public Key Required!';
 $_[ 'error_test_secret_key' ]                 = 'Test Secret Key Required!';
 $_[ 'error_live_public_key' ]              = 'Live Public Key Required!';
 $_[ 'error_live_secret_key' ]                 = 'Live Secret Key Required!';
+$_[ 'error_validate_currency_co' ]                 = 'Openpay Plugin is only available for COP currency.';
+$_[ 'error_validate_currency_mx' ]                 = 'Openpay Plugin is only available for MXN and USD currencies.';
 $_[ 'error_correct_data' ] = 'To proceed You must correct some data';
 $_[ 'error_total' ] = 'Total can not be less then %s';
 $_[ 'error_error' ] = 'Sorry, seems we got Error here.';
@@ -100,4 +103,5 @@ $_[ 'error_min_total' ] = 'Total amount less then permissible';
 $_[ 'error_missing_currency' ] = 'Currency missing';
 $_[ 'error_test_merchant_account' ] = 'Test account credentials are invalid!';
 $_[ 'error_live_merchant_account' ] = 'Live account credentials are invalid!';
+$_[ 'error_affiliation_bbva' ] = 'The BBVA affiliation number is invalid!';
 ?>

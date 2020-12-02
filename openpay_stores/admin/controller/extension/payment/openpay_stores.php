@@ -12,8 +12,9 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
     
     public function index() {
         $min_total = 1;
-        $this->language->load('extension/payment/openpay_stores');
 
+        $this->language->load('extension/payment/openpay_stores');
+        $this->load->model('localisation/currency');
         $this->document->setTitle($this->language->get('heading_title'));
 
         $this->load->model('setting/setting');
@@ -39,6 +40,12 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
             $data['error_warning'] = '';
         }
         
+        if (isset($this->error['validate_currency'])) {
+            $data['error_validate_currency'] = $this->error['validate_currency'];
+        } else {
+            $data['error_validate_currency'] = '';
+        }
+
         if (isset($this->error['test_merchant_id'])) {
             $data['error_test_merchant_id'] = $this->error['test_merchant_id'];
         } else {
@@ -178,6 +185,15 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
             $this->error['warning'] = $this->language->get('error_permission');
         }
         $country = $this->request->post['payment_openpay_stores_country'];
+
+        // Currency validation
+        if (!$this->validateCurrency($this->config->get('config_currency'), $country)) {
+            if($country === 'MX')
+                $this->error['validate_currency'] = $this->language->get('error_validate_currency_mx');
+            else if($country === 'CO')
+                $this->error['validate_currency'] = $this->language->get('error_validate_currency_co');
+        }
+
         if ($this->request->post['payment_openpay_stores_mode']) {
             
             if (empty($this->request->post['payment_openpay_stores_test_merchant_id'])) {
@@ -295,7 +311,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
         curl_close($ch);
 
         $array = json_decode($result, true);
-        if (array_key_exists('id', $array)) {
+        if (is_array($array) && array_key_exists('id', $array)) {
             return true;
         } else {
             return false;
@@ -380,6 +396,15 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
             return $this->config->get('payment_openpay_stores_test_secret_key');
         }
         return $this->config->get('payment_openpay_stores_live_secret_key');
+    }
+
+    private function validateCurrency($currencyCode, $country) {        
+        if ($country === 'MX') {
+            return $currencyCode == 'MXN';
+        } else if ($country === 'CO') {
+            return $currencyCode == 'COP';
+        }
+        return false;
     }
 
 }

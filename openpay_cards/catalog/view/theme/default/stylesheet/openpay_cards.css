@@ -26,6 +26,11 @@
     width: 100%;
 }
 
+.bbva_cards {
+    width: 200px;
+    margin-left: 10px;
+}
+
 .cvv{
     max-width: 100%;
 }

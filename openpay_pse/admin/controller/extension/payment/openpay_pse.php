@@ -12,8 +12,9 @@ class ControllerExtensionPaymentOpenpayPse extends Controller {
     
     public function index() {
         $min_total = 1;
-        $this->language->load('extension/payment/openpay_pse');
 
+        $this->language->load('extension/payment/openpay_pse');
+        $this->load->model('localisation/currency');
         $this->document->setTitle($this->language->get('heading_title'));
 
         $this->load->model('setting/setting');
@@ -37,6 +38,12 @@ class ControllerExtensionPaymentOpenpayPse extends Controller {
             $data['error_warning'] = $this->error['warning'];
         } else {
             $data['error_warning'] = '';
+        }
+
+        if (isset($this->error['validate_currency'])) {
+            $data['error_validate_currency'] = $this->error['validate_currency'];
+        } else {
+            $data['error_validate_currency'] = '';
         }
         
         if (isset($this->error['test_merchant_id'])) {
@@ -189,6 +196,10 @@ class ControllerExtensionPaymentOpenpayPse extends Controller {
             $this->error['warning'] = $this->language->get('error_permission');
         }
         
+        if ($this->config->get('config_currency') != 'COP') {
+            $this->error['validate_currency'] = $this->language->get('error_validate_currency_co');
+        }
+        
         if ($this->request->post['payment_openpay_pse_mode']) {            
             if (empty($this->request->post['payment_openpay_pse_test_merchant_id'])) {
                 $this->error['test_merchant_id'] = $this->language->get('error_test_merchant_id');
@@ -300,7 +311,7 @@ class ControllerExtensionPaymentOpenpayPse extends Controller {
         curl_close($ch);
 
         $array = json_decode($result, true);
-        if (array_key_exists('id', $array)) {
+        if (is_array($array) && array_key_exists('id', $array)) {
             return true;
         } else {
             return false;

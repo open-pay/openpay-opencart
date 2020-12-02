@@ -11,10 +11,16 @@
         </div>
 
         <div class="row mb20">
-            {% if country == 'MX' %}                        
-                <div class="col-md-4">                                    
-                    <img src="https://openpay-plugins-screenshots.s3.amazonaws.com/tarjetas_2x.png" alt="Tarjetas" class="tiendas">
-                </div>
+            {% if country == 'MX' %}
+                {%if  classification != 'eglobal' %}                        
+                    <div class="col-md-4">                                    
+                        <img src="https://openpay-plugins-screenshots.s3.amazonaws.com/tarjetas_2x.png" alt="Tarjetas" class="tiendas">
+                    </div>
+                {% else %}
+                    <div class="col-md-4">                                    
+                        <img src="/catalog/view/theme/default/image/bbva_cards.png" alt="Tarjetas" class="bbva_cards">
+                    </div>
+                {% endif %}
                 <div class="col-md-12">                    
                     <img src="https://openpay-plugins-screenshots.s3.amazonaws.com/bancos_2x.png" alt="Tarjetas" class="tiendas">
                 </div>
@@ -101,7 +107,7 @@
             {% endif %}
         </div>    
         
-        {% if months_interest_free|length > 0 and  country == 'MX' %}
+        {% if months_interest_free|length > 0 %}
             <div class="form-group">
                 <label class="col-sm-2 control-label" for="cc-cvv">
                     Meses sin intereses
@@ -121,7 +127,7 @@
             </div>
         {% endif %}
 
-        {% if installments|length > 0 and country == 'CO' %}
+        {% if installments|length > 0 %}
             <div class="form-group">
                 <label class="col-sm-2 control-label" for="cc-cvv">
                     Cuotas
