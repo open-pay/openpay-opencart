@@ -9,16 +9,20 @@ if (!defined('OWNER'))
 class ControllerExtensionPaymentOpenpayCards extends Controller {
 
     private $error = array(); // This is used to set the errors, if any.
-    
+    private $merchant_classification;
     public function index() {
         $min_total = 1;
-        $this->language->load('extension/payment/openpay_cards');
 
+        $this->language->load('extension/payment/openpay_cards');
+        $this->load->model('localisation/currency');
         $this->document->setTitle($this->language->get('heading_title'));
 
         $this->load->model('setting/setting');
 
-        if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {            
+        if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {  
+            
+            $this->request->post['payment_openpay_cards_classification'] =  $this->merchant_classification;
+
             $this->model_setting_setting->editSetting('payment_openpay_cards', $this->request->post);
 
             $this->session->data['success'] = $this->language->get('text_success');
@@ -36,6 +40,12 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
             $data['error_test_merchant_id'] = $this->error['test_merchant_id'];
         } else {
             $data['error_test_merchant_id'] = '';
+        }
+
+        if (isset($this->error['validate_currency'])) {
+            $data['error_validate_currency'] = $this->error['validate_currency'];
+        } else {
+            $data['error_validate_currency'] = '';
         }
         
         if (isset($this->error['test_secret_key'])) {
@@ -86,6 +96,12 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
             $data['error_total'] = '';
         }
 
+        if(isset($this->error['affiliation_bbva'])){
+            $data['error_affiliation_bbva'] = $this->error['affiliation_bbva'];
+        }else{
+            $data['error_affiliation_bbva'] = '';
+        }
+        
         $data['heading_title'] = $this->language->get('heading_title');
 
         $data['text_enabled'] = $this->language->get('text_enabled');
@@ -125,6 +141,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
 
         $data['entry_country'] = $this->language->get('entry_country');
         $data['entry_iva'] = $this->language->get('entry_iva');
+        $data['entry_affiliation_bbva'] = $this->language->get('entry_affiliation_bbva');
 
         $data['button_save'] = $this->language->get('button_save');
         $data['button_cancel'] = $this->language->get('button_cancel');
@@ -179,7 +196,13 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
         $data['payment_openpay_cards_total'] = $this->fillSetting('payment_openpay_cards_total');
         $data['payment_openpay_cards_sort_order'] = $this->fillSetting('payment_openpay_cards_sort_order');
         $data['payment_openpay_cards_geo_zone_id'] = $this->fillSetting('payment_openpay_cards_geo_zone_id');
+        $data['payment_openpay_cards_affiliation_bbva'] = $this->fillSetting('payment_openpay_cards_affiliation_bbva');
+       
+        if($this->merchant_classification == '')
+            $this->merchant_classification = $this->fillSetting('payment_openpay_cards_classification');
         
+        $data['payment_openpay_cards_classification'] =  $this->merchant_classification;
+            
         /*
          * MESES SIN INTERESES
          */
@@ -190,7 +213,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
             $data['payment_openpay_cards_interest_free'] = $this->config->get('payment_openpay_cards_interest_free');        
         } else {
             $data['openpay_card_interest_free'] = array();
-        } 
+        }
         
         /*
          * Cuotas
@@ -203,10 +226,21 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
         } else {
             $data['payment_openpay_cards_installments'] = array();
         } 
-        
+
         // Tipo de cargo
-        $data['charge_types'] = array('direct' => 'Directo', 'auth' => 'Autenticación selectiva', '3d' => '3D Secure'); 
-        $data['payment_openpay_cards_charge_type'] = $this->fillSetting('payment_openpay_cards_charge_type');  
+        $data['charge_types'] = array('direct' => 'Directo', 'auth' => 'Autenticación selectiva', '3d' => '3D Secure');
+        
+        if($this->merchant_classification === 'eglobal'){
+            $data['payment_openpay_cards_charge_type'] = '3d';  
+        }else{
+            if($this->fillSetting('payment_openpay_cards_affiliation_bbva') != ''){
+                $data['payment_openpay_cards_charge_type'] = 'direct';
+                $data['payment_openpay_cards_affiliation_bbva'] = ''; 
+            }else{
+                $data['payment_openpay_cards_charge_type'] = $this->fillSetting('payment_openpay_cards_charge_type');
+            }
+        }
+        
         $data['help_charge_types'] = '<p>* ¿Qué es cargo directo? Openpay se encarga de validar la operación y recharzarla cuando detecta riesgo.</p>
             <p>* ¿Qué es la autenticación selectiva? Es cuando el banco se encarga de validar la autenticidad del cuentahabiente, solo si Openpay detecta riesta en la operación.</p>
             <p>* ¿Qué es 3D Secure? El banco se encargará de validar su autenticidad del cuentahabiente en todas las operaciones.</p>';
@@ -239,6 +273,15 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
             $this->error['warning'] = $this->language->get('error_permission');
         }
         $country = $this->request->post['payment_openpay_cards_country'];
+
+        // Currency validation
+        if (!$this->validateCurrency($this->config->get('config_currency'), $country)) {
+            if($country === 'MX')
+                $this->error['validate_currency'] = $this->language->get('error_validate_currency_mx');
+            else if($country === 'CO')
+                $this->error['validate_currency'] = $this->language->get('error_validate_currency_co');
+        }
+
         if ($this->request->post['payment_openpay_cards_mode']) {
             if (empty($this->request->post['payment_openpay_cards_test_merchant_id'])) {
                 $this->error['test_merchant_id'] = $this->language->get('error_test_merchant_id');
@@ -275,6 +318,11 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
         if (!isset($this->request->post['payment_openpay_cards_total']) || (float) $this->request->post['payment_openpay_cards_total'] < (float) $min_total) {
             $this->error['total'] = sprintf($this->language->get('error_total'), $this->currency->format($min_total, $this->config->get('config_currency')));
         }
+        
+        if($this->merchant_classification === 'eglobal' and empty($this->request->post['payment_openpay_cards_affiliation_bbva'])){
+            $this->error['affiliation_bbva'] = $this->language->get('error_affiliation_bbva');
+        }
+
 
         if (empty($this->error)) {
             return true;
@@ -338,12 +386,25 @@ class ControllerExtensionPaymentOpenpayCards extends Controller {
         curl_close($ch);
 
         $array = json_decode($result, true);
-        if (array_key_exists('id', $array)) {
+
+        $this->log->write("MerchantInfo #".json_encode($array)." UrlBase".$url." SK".$sk);
+
+        if (is_array($array) && array_key_exists('id', $array)) {
+            $this->merchant_classification = $array['classification'];
             return true;
         } else {
             return false;
         }
-    }    
+    }
+    
+    private function validateCurrency($currencyCode, $country) {        
+        if ($country === 'MX') {
+            return $currencyCode == 'MXN' || $currencyCode == 'USD';
+        } else if ($country === 'CO') {
+            return $currencyCode == 'COP';
+        }
+        return false;
+    }
 
 }
 
