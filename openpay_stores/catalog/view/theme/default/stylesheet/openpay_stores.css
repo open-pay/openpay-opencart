@@ -209,4 +209,20 @@ img.Logo_paynet  {
     display: inline-block;position: relative;width: 173px;font-size: 11px;
 }
 
-
+.store-logos {
+    align-items: center;
+    display: grid;
+    justify-content: space-between;
+    grid-template-columns: 20% 70%;
+    margin: 0 0 15px;
+}
+.store-logos .store-logos__via {
+    text-align: center;
+    display: flex;
+}
+.store-logos .store-logos__via > img:first-child {
+    max-width: 180px;
+}
+.store-logos .store-logos__via > img:last-child {
+    max-width: 90px;
+}

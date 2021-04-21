@@ -24,6 +24,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
         $data['button_confirm'] = $this->language->get('button_confirm');
         $data['button_back'] = $this->language->get('button_back');
         $data['country'] = $this->getCountry();
+        $data['text_title'] = $this->config->has('payment_openpay_stores_title') ? $this->config->get('payment_openpay_stores_title') : $this->language->get('text_title');
 
         return $this->load->view('extension/payment/openpay_stores', $data);
     }
