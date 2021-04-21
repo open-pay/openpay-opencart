@@ -3,12 +3,20 @@
 <div id="msgBox" role="alert"><i></i><span style="margin-left:10px;"></span></div>
 <div class="content" id="payment">
     
-    <h2>Pago en Tiendas</h2>
+    <h2>{{ text_title }}</h2>
     <div class="mb20">
       {% if country == 'MX' %}
         <img src="https://openpay-plugins-screenshots.s3.amazonaws.com/openpay_stores.png" alt="Tiendas" class="tiendas">
       {% else %}
-        <img src="/catalog/view/theme/default/image/openpay_stores_co.png" alt="Tiendas" class="tiendas">
+        <div class="store-logos">
+          <div class="store-logos__puntored">
+             <img src="/catalog/view/theme/default/image/puntored_logo.jpeg" alt="Punto Red" class="tiendas">
+          </div>
+          <div class="store-logos__via">
+             <img src="/catalog/view/theme/default/image/baloto_logo.png" alt="Baloto" class="tiendas">
+              <img src="/catalog/view/theme/default/image/via_logo.png" alt="Via" class="tiendas">
+          </div>
+        </div>
       {% endif %}
     </div>
     <div class="well">
