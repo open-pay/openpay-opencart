@@ -1,0 +1,33 @@
+<link rel="stylesheet" type="text/css" href="/catalog/view/theme/default/stylesheet/openpay_codi.css">
+
+<div id="msgBox" role="alert"><i></i><span style="margin-left:10px;"></span></div>
+<div class="content codi" id="payment">
+    <h2 class="codi__title">Pagos con CoDi®</h2>
+    <div class="row">
+      <div class="col-sm-3">
+        <figure class="codi__image">
+           <img src="https://i.postimg.cc/XYFndvRx/QR.jpg" alt="CoDi® QR"/>
+        </figure>  
+      </div>
+      <div class="col-sm-6">
+        <h4 class="codi__subtitle">¿Qué es CoDi®?</h4>
+        <p class="codi__text">CoDi® es una plataforma desarrollada por Banco de México que permite hacer cobros a través de un código QR desde un celular.</p> 
+      </div>
+    </div>
+    <div class="well">
+        Una vez que des clic en el botón <strong>Confirmar Orden</strong>, tu pedido será puesto en <strong>Espera de pago</strong>. Localiza la sección de CoDi® en tu app móvil, sigue los pasos para escanear el código QR y completa tu pago.
+    </div>
+    
+    <div class="pull-right">
+            <button type="button" class="btn btn-primary" id="button-confirm" data-loading-text="Processing">{{ button_confirm }}</button>
+    </div>
+    
+</div>
+
+<script type="text/javascript">
+  $(document).ready(function(){
+    $('#button-confirm').click(function(){
+      location = '{{ continue }}';
+    });
+  });
+</script>
