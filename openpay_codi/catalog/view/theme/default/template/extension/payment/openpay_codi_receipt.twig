@@ -1,0 +1,126 @@
+<script type="text/javascript" src="/catalog/view/theme/default/javascript/jquery-2.1.1.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/catalog/view/theme/default/stylesheet/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="/catalog/view/theme/default/stylesheet/openpay_codi_receipt.css">
+
+
+<section class="codi container"> 
+    <div class="codi__header">
+        <div class="codi__icon">
+            <img alt="" src="/catalog/view/theme/default/image/codi/QR.svg" alt="QR">
+            <div class="codi__text codi__text--small">Utilizar la aplicación móvil de banco para hacer el pago de la notificación</div>
+        </div>
+            <div class="codi__subtitle">Pago con CoDi®</div>
+        </div>
+        <div class="codi__content">
+            <figure class="codi__image">
+                <img id="CoDiImage" src="data:image/png;base64, {{ barcode_base64 }}" alt="QR CoDi®" />
+            </figure>
+            <div class="codi__information">
+                <div class="codi__amount">{{ amount }}</div>
+                <div class="codi__currency">{{ currency }}</div>
+            </div>
+            <div class="codi__expiration">
+                <div id="CodiTimerTxt" class="codi__text codi__text--timer"></div>
+                <div id="CoDiTimer" class="codi__timer"></div>
+            </div>
+        <div>
+</section> 
+        
+        <div class="col-lg-8 text-center col-lg-offset-2" style="margin-top: 30px; margin-bottom: 30px;">
+            <a type="button" class="btn btn-success btn-lg" id="button-confirm"><i class="fa fa-check"></i> Regresar a la tienda</a>
+        </div>        
+    </div>        
+</div>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+        $('#button-confirm').click(function() {
+            location = '{{ continue }}';
+        });
+        
+        var countDownDate = new Date('{{ due_date }}').getTime();
+        fetchStatus();
+
+        function fetchStatus(){
+             $.ajax({
+                type: 'POST',
+                url: 'index.php?route=extension/payment/openpay_codi/fetchStatus',
+                headers: { "cache-control": "no-cache" },
+                dataType: 'json',
+                data: 	{
+                            ajax: true,
+                            order_id: {{ order_id }},
+                        }  ,
+                success: function(response) {
+                    if(response.status_code == 200){
+                        switch(response.order_status){
+                            case 'Complete':
+                                clearInterval(x);
+                                $('#CoDiImage').attr('src', '/catalog/view/theme/default/image/codi/check.png');
+                                $('.codi__icon').hide();
+                                $('#CodiTimerTxt').html('Su pago ha sido &nbsp;');
+                                $('#CoDiTimer').html('completado');
+                                $('#CoDiTimer').attr('color', '#34a964');
+                                console.log('completed');
+                            break;
+                            case 'Canceled':
+                                clearInterval(x);
+                                $("#CodiTimerTxt").html("Su pago ha &nbsp;");
+                                $("#CoDiTimer").html("expirado");
+                            break;
+                            case 'Pending':
+                                console.log('pending'); 
+                            break;
+                        }
+                    }else{
+
+                    }
+                console.log("SUCCESS22",response);
+            },
+            error: function(response) {
+            console.log("ERROR",response);
+                },
+            });
+        }
+
+        var x = setInterval(function() {
+            // Get today's date and time
+            var now = new Date().getTime();
+            // Find the distance between now and the count down date
+            var distance = countDownDate - now;
+
+            // Time calculations for days, hours, minutes and seconds
+            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            var timer = "Completa tu compra en:&nbsp; ";
+
+            if(days > 0)
+                timer += days + "d ";
+
+            if(hours > 0)
+                timer += ((hours < 10) ? "0" + hours : hours) + "h ";
+
+            if(minutes > 0)
+                timer += ((minutes < 10) ? "0" + minutes : minutes) + "m ";
+
+            if(seconds >= 0)
+                timer += ((seconds < 10) ? "0" + seconds : seconds ) + "s ";
+
+            if(seconds % 9 == 0){
+                fetchStatus()
+            }
+
+            // Display the result in the element with id="demo"
+            $("#CoDiTimer").html(timer);
+
+            // If the count down is finished, write some text
+            if (distance < 0) {
+                clearInterval(x);
+            }
+        }, 1000);
+
+    });
+</script>
