@@ -1,4 +1,4 @@
-![Openpay OpenCart](http://www.openpay.mx/img/github/opencart.jpg)
+![Openpay OpenCart](https://www.openpay.mx/img/github/opencart.jpg)
 
 Plugins de Openpay para OpenCart v3
 
