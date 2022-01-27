@@ -38,7 +38,9 @@
     margin-bottom: 30px;
 }
 
-
+#payment .codi__well {
+    background-color: #F5F7F9;
+}
 
 /* Responsive: Portrait tablets and up */
 @media screen and (min-width: 768px) {

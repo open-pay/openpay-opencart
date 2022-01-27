@@ -38,7 +38,13 @@
     margin-bottom: 30px;
 }
 
+#payment .openpay__text {
+    background-color: #F5F7F9;
+}
 
+#payment .openpay__link {
+    color: #11BFF8;
+}
 
 /* Responsive: Portrait tablets and up */
 @media screen and (min-width: 768px) {
