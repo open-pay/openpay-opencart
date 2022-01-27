@@ -1,32 +1,23 @@
 <link rel="stylesheet" type="text/css" href="/catalog/view/theme/default/stylesheet/openpay_stores.css">
 
 <div id="msgBox" role="alert"><i></i><span style="margin-left:10px;"></span></div>
-<div class="content" id="payment">
+<div class="openpay content" id="payment">
     
     <h2>{{ text_title }}</h2>
     <div class="mb20">
       {% if country == 'MX' %}
-        <img src="https://openpay-plugins-screenshots.s3.amazonaws.com/openpay_stores.png" alt="Tiendas" class="tiendas">
+        <img src="https://img.openpay.mx/plugins/paynet_logos.png" alt="Tiendas" class="tiendas">
       {% else %}
-        <div class="store-logos">
-          <div class="store-logos__puntored">
-             <img src="/catalog/view/theme/default/image/puntored_logo.jpeg" alt="Punto Red" class="tiendas">
-          </div>
-          <div class="store-logos__via">
-             <img src="/catalog/view/theme/default/image/baloto_logo.png" alt="Baloto" class="tiendas">
-              <img src="/catalog/view/theme/default/image/via_logo.png" alt="Via" class="tiendas">
-          </div>
-        </div>
+        <img src="https://img.openpay.mx/plugins/puntos_recaudo_logos.png" alt="Tiendas" class="tiendas">
       {% endif %}
     </div>
-    <div class="well">
-        Una vez que des clic en el botón <strong>Confirmar Orden</strong>, tu pedido será puesto en <strong>Espera de pago</strong>, deberás de imprimir tu recibo pago el cual podrás liquidar en cualquiera de las tiendas participantes. <br> <a href="{% if country == 'MX' %} http://www.openpay.mx/tiendas-de-conveniencia.html {% else %} https://www.openpay.co/tiendas/ {% endif %}" target="_blank">Ver todas las tiendas</a>.
+    <div class="well openpay__text">
+        Una vez que des clic en el botón <strong>Confirmar Orden</strong>, tu pedido será puesto en <strong>Espera de pago</strong>, deberás de imprimir tu recibo pago el cual podrás liquidar en cualquiera de las tiendas participantes. <br> <a class="openpay__link" href="{% if country == 'MX' %} http://www.openpay.mx/tiendas-de-conveniencia.html {% else %} https://www.openpay.co/tiendas/ {% endif %}" target="_blank">Ver todas las tiendas</a>.
     </div>
     
     <div class="pull-right">
             <button type="button" class="btn btn-primary" id="button-confirm" data-loading-text="Processing">{{ button_confirm }}</button>
     </div>
-    
 </div>
 
 <script type="text/javascript">
