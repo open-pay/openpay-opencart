@@ -277,15 +277,27 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         }
         
         if ($charge->status !== 'completed') {
-            $failed_status_id = 10;                        
-            $comment = 'Validación con 3D Secure fallida';
-            $notify = true;
+            if(property_exists($charge, 'authorization') && ($charge->status == 'in_progress' && ($charge->id != $charge->authorization))){
+                $pending_status_id = $this->pending_status_id;
+                $comment = 'La orden se preatorizó';
+                $notify = true;
+
+                $this->load->model('checkout/order');        
+                $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $pending_status_id, $comment, $notify);
             
-            $this->load->model('checkout/order');        
-            $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $failed_status_id, $comment, $notify);
-            
-            $this->clearCart();
-            $this->response->redirect($this->url->link('checkout/failure', '', true));
+                $this->clearCart();
+                $this->response->redirect($this->url->link('checkout/success', '', true));
+            } else {
+                $failed_status_id = 10;                        
+                $comment = 'Validación con 3D Secure fallida';
+                $notify = true;
+                
+                $this->load->model('checkout/order');        
+                $this->model_checkout_order->addOrderHistory($this->session->data['order_id'], $failed_status_id, $comment, $notify);
+                
+                $this->clearCart();
+                $this->response->redirect($this->url->link('checkout/failure', '', true));
+            }
         }               
         
         $this->load->model('extension/payment/openpay_cards');
