@@ -147,6 +147,8 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
 
         $country = $this->config->get('payment_openpay_cards_country');
         $merchant_classification = $this->getMerchantClassification();
+
+        $origin_channel = 'PLUGIN_OPENCART';
         
         $charge_request = array(
             'method' => 'card',
@@ -157,7 +159,8 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             'description' => 'Order ID# '.$this->session->data['order_id'],
             'order_id' => $this->session->data['order_id'],
             'use_card_points' => $this->request->post['use_card_points'],
-            'capture' => $capture == '1' ? true : false
+            'capture' => $capture == '1' ? true : false,
+            'origin_channel' => $origin_channel
         );
 
 
