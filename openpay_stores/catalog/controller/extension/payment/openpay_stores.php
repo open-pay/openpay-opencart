@@ -95,6 +95,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
                     $due_date = date('Y-m-d\TH:i:s', strtotime('+720 hours'));
                 }
 
+                $origin_channel = 'PLUGIN_OPENCART';
 
                 $charge_request = array(
                     'method' => 'store',
@@ -102,7 +103,8 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
                     'amount' => $amount,
                     'description' => 'Order ID# '.$this->session->data['order_id'],
                     'order_id' => $this->session->data['order_id'],
-                    'due_date' => $due_date
+                    'due_date' => $due_date,
+                    'origin_channel' => $origin_channel
                 );
 
                 if ($this->getCountry() === 'CO') {

@@ -91,6 +91,7 @@ class ControllerExtensionPaymentOpenpayPse extends Controller {
                 
                 $amount = number_format((float)$order_info['total'], 2, '.', '');
 
+                $origin_channel = 'PLUGIN_OPENCART';
 
                 $charge_request = array(
                     'method' => 'bank_account',
@@ -99,6 +100,7 @@ class ControllerExtensionPaymentOpenpayPse extends Controller {
                     'description' => 'Order ID# ' . $this->session->data['order_id'],
                     'order_id' => $this->session->data['order_id'],
                     'iva' => $this->config->get('payment_openpay_pse_iva'),
+                    'origin_channel' => $origin_channel,
                     'redirect_url' => $this->config->get('config_url').'index.php?route=extension/payment/openpay_pse/confirmPse'
                 );
                 $charge = $this->createOpenpayCharge($customer, $charge_request);
