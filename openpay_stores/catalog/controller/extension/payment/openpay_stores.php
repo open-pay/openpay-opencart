@@ -257,16 +257,23 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CART".$country."/v2");      
-                
+        curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CART".$country."/v2");
+
+        if (!is_array($headers)) {
+            $headers = array();
+        }
+              
         if ($params !== null) {            
             $data_string = json_encode($params);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);            
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                'Content-Type: application/json',
-                'Content-Length: '.strlen($data_string))
-            );
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);  
+            array_push($headers, 'Content-Type: application/json');
+            array_push($headers, 'Content-Length: ' . strlen($data_string));
+            
+            if($country === 'MX'){
+                array_push($headers, 'X-Forwarded-For: ' . $this->getClientIp());
+            }
         }
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         
         $result = curl_exec($ch);
         curl_close($ch);
@@ -437,6 +444,25 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
         $mail->addAttachment($path);
         $mail->send();
     }
+
+    private function getClientIp() {
+        // Recogemos la IP de la cabecera de la conexión
+        if (!empty($_SERVER['HTTP_CLIENT_IP']))   
+        {
+          $ipAdress = $_SERVER['HTTP_CLIENT_IP'];
+        }
+        // Caso en que la IP llega a través de un Proxy
+        elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR']))  
+        {
+          $ipAdress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        }
+        // Caso en que la IP lleva a través de la cabecera de conexión remota
+        else
+        {
+          $ipAdress = $_SERVER['REMOTE_ADDR'];
+        }
+        return $ipAdress;
+      }
 
 }
 
