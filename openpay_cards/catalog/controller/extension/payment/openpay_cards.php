@@ -346,6 +346,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
 
         $username = $this->getSecretApiKey();
         $password = "";
+        $headers = array();
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $abs_url);
@@ -358,10 +359,6 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CART".$country."/v2");
         else
             curl_setopt($ch, CURLOPT_USERAGENT, "BBVA-CART".$country."/v1");
-
-        if (!is_array($headers)) {
-            $headers = array();
-        }
 
         if ($params !== null) {            
             $data_string = json_encode($params);
