@@ -87,13 +87,9 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
                 }
                 
                 $amount = number_format((float)$order_info['total'], 2, '.', '');
-
-                $deadline = $this->config->get('payment_openpay_stores_deadline');
-                if ($deadline > 0) {
-                    $due_date = date('Y-m-d\TH:i:s', strtotime('+'.$deadline.' hours'));
-                } else {
-                    $due_date = date('Y-m-d\TH:i:s', strtotime('+720 hours'));
-                }
+                
+                $deadline = $this->config->get('payment_openpay_banks_deadline');
+                $due_date = date('Y-m-d\TH:i:s', strtotime('+' . $deadline . ' hours'));
 
                 $origin_channel = 'PLUGIN_OPENCART';
 
@@ -103,12 +99,15 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
                     'amount' => $amount,
                     'description' => 'Order ID# '.$this->session->data['order_id'],
                     'order_id' => $this->session->data['order_id'],
-                    'due_date' => $due_date,
                     'origin_channel' => $origin_channel
                 );
 
                 if ($this->getCountry() === 'CO') {
                     $charge_request['iva'] = $this->config->get('payment_openpay_stores_iva');
+                }
+
+                if ($deadline != "") {
+                    $charge_request['due_date'] = $due_date;
                 }
 
                 $charge = $this->createOpenpayCharge($customer, $charge_request);
@@ -250,6 +249,7 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
 
         $username = $this->getSecretApiKey();
         $password = "";
+        $headers = array();
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $abs_url);
@@ -258,10 +258,6 @@ class ControllerExtensionPaymentOpenpayStores extends Controller
         curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CART".$country."/v2");
-
-        if (!is_array($headers)) {
-            $headers = array();
-        }
               
         if ($params !== null) {            
             $data_string = json_encode($params);
