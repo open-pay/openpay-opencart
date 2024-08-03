@@ -73,7 +73,7 @@
                                     Sandbox llave secreta
                                 </label>
                                 <div class="col-sm-10">
-                                    <input type="text" name="payment_openpay_pse_test_secret_key" value="{{ payment_openpay_pse_test_secret_key }}" class="form-control" id="input-test-secret">
+                                    <input type="text" id="payment_openpay_pse_test_secret_key" name="payment_openpay_pse_test_secret_key" value="{{ payment_openpay_pse_test_secret_key }}" class="form-control" id="input-test-secret">
                                     {% if error_test_secret_key %}
                                         <div class="text-danger">{{ error_test_secret_key }}</div>
                                     {% endif %}                                    
@@ -87,7 +87,7 @@
                                     Producción Merchant ID
                                 </label>
                                 <div class="col-sm-10">
-                                    <input type="text" name="payment_openpay_pse_live_merchant_id" value="{{ payment_openpay_pse_live_merchant_id }}" class="form-control" id="input-live-merchant">
+                                    <input type="text" id="payment_openpay_pse_live_merchant_id" name="payment_openpay_pse_live_merchant_id" value="{{ payment_openpay_pse_live_merchant_id }}" class="form-control" id="input-live-merchant">
                                     {% if error_live_merchant_id %}
                                         <div class="text-danger">{{ error_live_merchant_id }}</div>
                                     {% endif %}
@@ -98,7 +98,7 @@
                                     Producción llave secreta
                                 </label>
                                 <div class="col-sm-10">
-                                    <input type="text" name="payment_openpay_pse_live_secret_key" value="{{ payment_openpay_pse_live_secret_key }}" class="form-control" id="input-live-secret">
+                                    <input type="text" id="payment_openpay_pse_live_secret_key" name="payment_openpay_pse_live_secret_key" value="{{ payment_openpay_pse_live_secret_key }}" class="form-control" id="input-live-secret">
                                     {% if error_live_secret_key %}
                                         <div class="text-danger">{{ error_live_secret_key }}</div>
                                     {% endif %}
