@@ -7,11 +7,14 @@ if (!defined('OWNER'))
     define('OWNER', 'Admin');
 
 class ControllerExtensionPaymentOpenpayBanks extends Controller {
+
+    private $error = array(); // This is used to set the errors, if any.
     
     public function index() {
         $min_total = 1;
-        $this->language->load('extension/payment/openpay_banks');
 
+        $this->language->load('extension/payment/openpay_banks');
+        $this->load->model('localisation/currency');
         $this->document->setTitle($this->language->get('heading_title'));
 
         $this->load->model('setting/setting');
@@ -20,9 +23,9 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
             $setting = $this->model_setting_setting->getSetting('payment_openpay_banks');
             $this->merge($setting, $this->request->post, true);
             
-            $mode = $this->request->post['payment_openpay_banks_test_mode'] ? 'test' : 'live';            
+            $mode = $this->request->post['payment_openpay_banks_mode'] ? 'test' : 'live';            
             $webhook = $this->createWebhook($mode);
-            if(!$webhook->error && $webhook != false){
+            if(!isset($webhook->error) && $webhook != false){
                 $setting['payment_openpay_banks_'.$mode.'_webhook'] = $webhook->id;
             }
                         
@@ -35,6 +38,12 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
             $data['error_warning'] = $this->error['warning'];
         } else {
             $data['error_warning'] = '';
+        }
+
+        if (isset($this->error['validate_currency'])) {
+            $data['error_validate_currency'] = $this->error['validate_currency'];
+        } else {
+            $data['error_validate_currency'] = '';
         }
         
         if (isset($this->error['test_merchant_id'])) {
@@ -155,7 +164,7 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
         $data['payment_openpay_banks_live_public_key'] = $this->fillSetting('payment_openpay_banks_live_public_key');
         $data['payment_openpay_banks_live_secret_key'] = $this->fillSetting('payment_openpay_banks_live_secret_key');
         $data['payment_openpay_banks_deadline'] = $this->fillSetting('payment_openpay_banks_deadline');
-        $data['payment_openpay_banks_test_mode'] = $this->fillSetting('payment_openpay_banks_test_mode');        
+        $data['payment_openpay_banks_mode'] = $this->fillSetting('payment_openpay_banks_mode');        
         $data['payment_openpay_banks_order_status_id'] = $this->fillSetting('payment_openpay_banks_order_status_id');
         $data['payment_openpay_banks_title'] = $this->fillSetting('payment_openpay_banks_title', $this->language->get('text_title'));
 
@@ -185,8 +194,12 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
         if (!$this->user->hasPermission('modify', 'extension/payment/openpay_banks')) {
             $this->error['warning'] = $this->language->get('error_permission');
         }
+
+        if ($this->config->get('config_currency') != 'MXN') {
+            $this->error['validate_currency'] = $this->language->get('error_validate_currency_mx');
+        }
         
-        if ($this->request->post['payment_openpay_banks_test_mode']) {            
+        if ($this->request->post['payment_openpay_banks_mode']) {            
             if (empty($this->request->post['payment_openpay_banks_test_merchant_id'])) {
                 $this->error['test_merchant_id'] = $this->language->get('error_test_merchant_id');
             }
@@ -195,7 +208,7 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
                 $this->error['test_secret_key'] = $this->language->get('error_test_secret_key');
             }            
             
-            if(!$this->getMerchantInfo($this->request->post['payment_openpay_banks_test_merchant_id'], $this->request->post['payment_openpay_banks_test_secret_key'], $this->request->post['payment_openpay_banks_test_mode'])){
+            if(!$this->getMerchantInfo($this->request->post['payment_openpay_banks_test_merchant_id'], $this->request->post['payment_openpay_banks_test_secret_key'], $this->request->post['payment_openpay_banks_mode'])){
                 $this->error['test_merchant_account'] = $this->language->get('error_test_merchant_account');                
             }
             
@@ -209,7 +222,7 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
                 $this->error['live_secret_key'] = $this->language->get('error_live_secret_key');
             }            
             
-            if(!$this->getMerchantInfo($this->request->post['payment_openpay_banks_live_merchant_id'], $this->request->post['payment_openpay_banks_live_secret_key'], $this->request->post['payment_openpay_banks_test_mode'])){
+            if(!$this->getMerchantInfo($this->request->post['payment_openpay_banks_live_merchant_id'], $this->request->post['payment_openpay_banks_live_secret_key'], $this->request->post['payment_openpay_banks_mode'])){
                 $this->error['live_merchant_account'] = $this->language->get('error_live_merchant_account');
             }
             
@@ -350,7 +363,7 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
     }
     
     private function getMerchantId() {
-        if ($this->config->get('payment_openpay_banks_test_mode')) {
+        if ($this->config->get('payment_openpay_banks_mode')) {
             return $this->config->get('payment_openpay_banks_test_merchant_id');
         }
         return $this->config->get('payment_openpay_banks_live_merchant_id');
@@ -365,7 +378,7 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
     }
     
     private function isTestMode() {
-        if ($this->config->get('payment_openpay_banks_test_mode') == '1') {
+        if ($this->config->get('payment_openpay_banks_mode') == '1') {
             return true;
         } else {
             return false;
@@ -373,7 +386,7 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
     }
 
     private function getSecretApiKey() {
-        if ($this->config->get('payment_openpay_banks_test_mode')) {
+        if ($this->config->get('payment_openpay_banks_mode')) {
             return $this->config->get('payment_openpay_banks_test_secret_key');
         }
         return $this->config->get('payment_openpay_banks_live_secret_key');
