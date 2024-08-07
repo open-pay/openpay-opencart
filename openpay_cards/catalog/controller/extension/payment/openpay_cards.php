@@ -169,7 +169,12 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         }
 
         if ($country === 'CO') {
-            $charge_request['iva'] = $this->config->get('payment_openpay_cards_iva');;
+            $charge_request['capture'] = true;
+            if ($this->config->get('payment_openpay_cards_iva') == ""){
+                $charge_request['iva'] = 0;
+            } else {
+                $charge_request['iva'] = $this->config->get('payment_openpay_cards_iva');
+            }
         }
 
         if (isset($this->request->post['interest_free']) && $this->request->post['interest_free'] > 1 && $country === 'MX') {
