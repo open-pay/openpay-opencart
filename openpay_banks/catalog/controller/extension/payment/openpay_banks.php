@@ -56,6 +56,7 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
                     'name' => $order_info['payment_firstname'],
                     'last_name' => $order_info['payment_lastname'],
                     'email' => $order_info['email'],
+                    'phone_number' => $order_info['telephone'],
                     'requires_account' => false
                 );
 
@@ -84,12 +85,8 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
 
                 $deadline = $this->config->get('payment_openpay_banks_deadline');
 
-                if($deadline > 0){
-                    $due_date = date('Y-m-d\TH:i:s', strtotime('+' . $deadline . ' hours'));
-                }else{
-                    $due_date = date('Y-m-d\TH:i:s', strtotime('+720 hours'));
-                }
-
+                $due_date = date('Y-m-d\TH:i:s', strtotime('+' . $deadline . ' hours'));
+                
                 $origin_channel = 'PLUGIN_OPENCART';
 
                 $charge_request = array(
@@ -98,9 +95,12 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
                     'amount' => $amount,
                     'description' => 'Order ID# ' . $this->session->data['order_id'],
                     'order_id' => $this->session->data['order_id'],
-                    'due_date' => $due_date,
                     'origin_channel' => $origin_channel
                 );
+
+                if ($deadline != "") {
+                    $charge_request['due_date'] = $due_date;
+                }
                 $charge = $this->createOpenpayCharge($customer, $charge_request);
 
 
@@ -265,7 +265,7 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
     }
     
     private function getMerchantId() {
-        if ($this->config->get('payment_openpay_banks_test_mode')) {
+        if ($this->config->get('payment_openpay_banks_mode')) {
             return $this->config->get('payment_openpay_banks_test_merchant_id');
         }
         return $this->config->get('payment_openpay_banks_live_merchant_id');
@@ -280,7 +280,7 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
     }
     
     private function isTestMode() {
-        if ($this->config->get('payment_openpay_banks_test_mode') == '1') {
+        if ($this->config->get('payment_openpay_banks_mode') == '1') {
             return true;
         } else {
             return false;
@@ -288,7 +288,7 @@ class ControllerExtensionPaymentOpenpayBanks extends Controller {
     }
 
     private function getSecretApiKey() {
-        if ($this->config->get('payment_openpay_banks_test_mode')) {
+        if ($this->config->get('payment_openpay_banks_mode')) {
             return $this->config->get('payment_openpay_banks_test_secret_key');
         }
         return $this->config->get('payment_openpay_banks_live_secret_key');
