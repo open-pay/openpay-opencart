@@ -169,7 +169,12 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         }
 
         if ($country === 'CO') {
-            $charge_request['iva'] = $this->config->get('payment_openpay_cards_iva');;
+            $charge_request['capture'] = true;
+            if ($this->config->get('payment_openpay_cards_iva') == ""){
+                $charge_request['iva'] = 0;
+            } else {
+                $charge_request['iva'] = $this->config->get('payment_openpay_cards_iva');
+            }
         }
 
         if (isset($this->request->post['interest_free']) && $this->request->post['interest_free'] > 1 && $country === 'MX') {
@@ -346,6 +351,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
 
         $username = $this->getSecretApiKey();
         $password = "";
+        $headers = array();
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $abs_url);
@@ -358,10 +364,6 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
             curl_setopt($ch, CURLOPT_USERAGENT, "Openpay-CART".$country."/v2");
         else
             curl_setopt($ch, CURLOPT_USERAGENT, "BBVA-CART".$country."/v1");
-
-        if (!is_array($headers)) {
-            $headers = array();
-        }
 
         if ($params !== null) {            
             $data_string = json_encode($params);
