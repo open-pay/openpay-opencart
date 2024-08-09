@@ -244,8 +244,9 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
         return false;
     }
     
-    private function createWebhook($mode){        
-        if(!$this->config->get('payment_openpay_stores_'.$mode.'_webhook')){                        
+    private function createWebhook($mode){    
+        $this->log->write(array('create_webhook' => 'entra al metodo para crear webhook'));
+        if(!$this->config->get('payment_openpay_stores_'.$mode.'_webhook')){  
             $protocol = (isset($this->request->server['HTTPS']) && (($this->request->server['HTTPS'] == 'on') || ($this->request->server['HTTPS'] == '1'))) ? 'https://' : 'http://';            
             $webhook_data = array(
                 'url' =>  $protocol.$_SERVER['HTTP_HOST'].'/index.php?route=extension/payment/openpay_stores/webhook',
@@ -254,8 +255,8 @@ class ControllerExtensionPaymentOpenpayStores extends Controller {
                         
             try {
                 return $this->openpayRequest('webhooks', 'POST', $webhook_data);
+                $this->log->write(array('webhook_data' => json_encode($webhook_data)));
             } catch (Exception $e) {                
-                //$this->session->data['error'] = $e->getMessage();
                 return false;
             }
         }

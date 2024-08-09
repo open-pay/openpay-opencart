@@ -47,11 +47,14 @@
                                 <label class="col-sm-2 control-label" for="radio-test-mode">{{ text_test_mode }}</label>
                                 <div class="col-sm-10">
                                     <label class="radio-inline">
-                                        <input id="radio-test-mode" type="radio" name="payment_openpay_banks_test_mode" value="0" {% if not payment_openpay_banks_test_mode %} checked {% endif %} >{{ text_no }}
+                                        <input id="radio-test-mode" type="radio" name="payment_openpay_banks_mode" value="0" {% if not payment_openpay_banks_mode %} checked {% endif %} >{{ text_no }}
                                     </label>
                                     <label class="radio-inline">
-                                        <input type="radio" name="payment_openpay_banks_test_mode" value="1" {% if payment_openpay_banks_test_mode %} checked {% endif %} >{{ text_yes }}
+                                        <input type="radio" name="payment_openpay_banks_mode" value="1" {% if payment_openpay_banks_mode %} checked {% endif %} >{{ text_yes }}
                                     </label>
+                                    {% if error_validate_currency %}
+                                        <div class="text-danger">{{ error_validate_currency }}</div>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="form-group">
@@ -215,3 +218,4 @@
         template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="min-width:150px;"></div></div>'
     });
 </script>
+<script type="text/javascript" src="./view/javascript/openpay/openpay_banks.js"></script>

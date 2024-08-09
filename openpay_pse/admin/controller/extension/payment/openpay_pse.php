@@ -27,6 +27,8 @@ class ControllerExtensionPaymentOpenpayPse extends Controller {
             $webhook = $this->createWebhook($mode);
             if(!$webhook->error && $webhook != false){
                 $setting['payment_openpay_pse_'.$mode.'_webhook'] = $webhook->id;
+            }else{
+                $this->log->write(array('mode' => $mode, 'setting' => $setting, 'webhook' => $webhook));
             }
                         
             $this->model_setting_setting->editSetting('payment_openpay_pse', $setting);
@@ -160,7 +162,7 @@ class ControllerExtensionPaymentOpenpayPse extends Controller {
 
         $data['payment_openpay_pse_test_merchant_id'] = $this->fillSetting('payment_openpay_pse_test_merchant_id');
         $data['payment_openpay_pse_live_merchant_id'] = $this->fillSetting('payment_openpay_pse_live_merchant_id');
-        $data['payment_openpay_pse_test_public_key'] = $this->fillSetting('payment_openpay_pse_test_public_key');
+        $data['payment_openpay_pse_public_key'] = $this->fillSetting('payment_openpay_pse_public_key');
         $data['payment_openpay_pse_test_secret_key'] = $this->fillSetting('payment_openpay_pse_test_secret_key');
         $data['payment_openpay_pse_live_public_key'] = $this->fillSetting('payment_openpay_pse_live_public_key');
         $data['payment_openpay_pse_live_secret_key'] = $this->fillSetting('payment_openpay_pse_live_secret_key');

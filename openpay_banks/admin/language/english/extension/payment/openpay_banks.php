@@ -85,6 +85,7 @@ $_[ 'error_live_merchant_id' ]                 = 'Live Merchant ID Required!';
 $_[ 'error_test_merchant_id' ]                 = 'Test Merchant ID Required!';
 $_[ 'error_test_secret_key' ]                 = 'Test Secret Key Required!';
 $_[ 'error_live_secret_key' ]                 = 'Live Secret Key Required!';
+$_[ 'error_validate_currency_mx' ]                 = 'Openpay Plugin is only available for MXN and USD currencies.';
 $_[ 'error_correct_data' ] = 'To proceed You must correct some data';
 $_[ 'error_total' ] = 'Total can not be less then %s';
 $_[ 'error_error' ] = 'Sorry, seems we got Error here.';
