@@ -94,6 +94,8 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         $this->language->load('extension/payment/openpay_cards');
         $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
 
+        $this->log->write("#INIT >>>>");
+
         if ($this->currency->convert($order_info['total'], $order_info['currency_code'], $this->config->get('sp_total_currency')) < (float) $this->config->get('sp_total')) {
             $json['error'] = $this->language->get('error_min_total');
             $this->response->setOutput(json_encode($json));
@@ -110,7 +112,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         }
 
         if ($customer == false) {
-            $this->log->write("Create Openapy Customer");
+            $this->log->write("#Create Openpay Customer");
 
             $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
             $customer_data = array(
@@ -125,6 +127,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
                 $customer_data = $this->formatAddress($customer_data, $order_info);
             }
 
+
             $customer = $this->createOpenpayCustomer($customer_data, $this->customer->getId());
 
             if (isset($customer->error)) {
@@ -133,7 +136,9 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
                 return;
             }
         } else {
+            $this->log->write("#Openpay Customer Exist");
             $customer = $this->getOpenpayCustomer($customer['openpay_customer_id']);
+
             if (isset($customer->error)) {
                 $json['error'] = $customer->error;
                 $this->response->setOutput(json_encode($json));
@@ -188,42 +193,42 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         if ($this->config->get('payment_openpay_cards_charge_type') == '3d' && $country === 'MX') {
             $charge_request['use_3d_secure'] = true;
             $charge_request['redirect_url'] = $this->config->get('config_url').'index.php?route=extension/payment/openpay_cards/confirm3d';            
-        }      
+        }
         
-        if (isset($this->request->post['save_cc'])) {
-            $card_data = array(            
-                'token_id' => $this->request->post['token'],            
-                'device_session_id' => $this->request->post['device_session_id']
-            );
-            $card = $this->createCreditCard($customer, $card_data);
-            
-            if (isset($card->error)) {            
-                $json['error'] = $card->error;
-                $this->response->setOutput(json_encode($json));            
-                return;
-            }
-            
-            $charge_request['source_id'] = $card->id;
+        // Validación permite guardar y es tarjeta nueva
+        if (isset($this->request->post['save_cc']) && $this->request->post['openpay_cc'] == 'new') {
+            $this->log->write('#Inside Save New Card');
+            $this->log->write('#VALUES   save_cc: ' .$this->request->post['save_cc']. ' openpay_cc: '. $this->request->post['openpay_cc']);
+            $this->log->write('#SaveCard '. ' customer => '. json_encode($customer). ' token '. $this->request->post['token']. ' device_session '. $this->request->post['device_session_id']. ' card_number '. $this->request->post['card_number']);
+            $charge_request['source_id'] = $this->validateNewCard($customer, $this->request->post['token'], $this->request->post['device_session_id'], $this->request->post['card_number']);
+        }
+
+        // Valida una tarjeta guardada para actualizarla
+        if ($this->canSaveCC() && $this->request->post['openpay_cc'] != 'new') {
+            $this->log->write('#CARD SAVED FOR UPDATE');
+            $this->log->write('#Save_CC Update  openpay_cc: ' . $this->request->post['openpay_cc']. 'customer_id: '. $customer->id);
+            $this->cvvValidation($this->request->post['openpay_cc'], $customer->id, $this->request->post['cc_cvv']);
         }
         
         $charge = $this->createOpenpayCharge($customer, $charge_request);
 
-        if (isset($charge->error)) {            
+        if (isset($charge->error)) {
+            $this->log->write('#ERROR $charge');
             if ($this->config->get('payment_openpay_cards_charge_type') == 'auth' && $charge->error_code == '3005') {
                 $charge_request['use_3d_secure'] = true;
                 $charge_request['redirect_url'] = $this->config->get('config_url').'index.php?route=extension/payment/openpay_cards/confirm3d';            
-                $charge = $this->createOpenpayCharge($customer, $charge_request);                
+                $charge = $this->createOpenpayCharge($customer, $charge_request);
                 $this->setCustomOrder($charge);
                 
                 $json['redirect'] = true;
-                $json['redirect_url'] = $charge->payment_method->url;                
+                $json['redirect_url'] = $charge->payment_method->url;
                 $json['success'] = $this->url->link('checkout/success', '', true);
-                $this->response->setOutput(json_encode($json));                
+                $this->response->setOutput(json_encode($json));
                 return;
             }
             
             $json['error'] = $charge->error;
-            $this->response->setOutput(json_encode($json));            
+            $this->response->setOutput(json_encode($json));
         } else {
             $this->setCustomOrder($charge);
             
@@ -231,7 +236,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
                 $json['redirect'] = true;
                 $json['redirect_url'] = $charge->payment_method->url;
                 $this->log->write($json);                       
-            }       
+            }
             
             $json['success'] = $this->url->link('checkout/success', '', true);
             $this->response->setOutput(json_encode($json));
@@ -460,6 +465,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
     }
     
     private function getOpenpayCustomer($customer_id) {
+        $this->log->write('#getOpenpayCustomer: '. $customer_id);
         try {            
             $customer = $this->openpayRequest('customers/'.$customer_id, 'GET');
             return $customer;
@@ -487,6 +493,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
     }
     
     private function createCreditCard($customer, $data) {
+        $this->log->write('#CreateCreditCards: ');
         try {                        
             return $this->openpayRequest('customers/'.$customer->id.'/cards', 'POST', $data);            
         } catch (Exception $e) {                        
@@ -528,12 +535,51 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         }        
     }
     
-    private function getCreditCards($customer) {        
+    private function getCreditCards($customer) {
         try {
             return $this->openpayRequest('customers/'.$customer->id.'/cards?offset=0&limit=10', 'GET');            
         } catch (Exception $e) {
             throw $e;
-        }        
+        }
+    }
+
+    private function validateNewCard($customer, $token, $device_session_id, $card_number){
+        $this->log->write('#ValidateNewCard ');
+        $cards = $this->getCreditCards($customer);
+        $card_number_bin = substr($card_number, 0, 6);
+        $card_number_complement = substr($card_number, -4);
+
+        foreach($cards as $card) {
+            if($card_number_bin == substr($card->card_number, 0, 6) && $card_number_complement == substr($card->card_number, -4)){
+                $this->response->setOutput('Latarjeta ya se ecuentra registrada, seleccionala de la lista de tarjetas.');
+                $this->log->write('Latarjeta ya se ecuentra registrada, seleccionala de la lista de tarjetas.');
+            }
+        }
+        $card_data = array(            
+            'token_id' => $token,            
+            'device_session_id' => $device_session_id
+        );
+    
+        $card = $this->createCreditCard($customer, $card_data);
+
+        return $card->id;
+    }
+
+    private function cvvValidation($openpay_cc, $openpay_customer, $cvv){
+        $this->log->write('#cvvValidation => $openpay_cc: '.$openpay_cc. ' openpay_customer: '. json_encode($openpay_customer) .' $cvv: '. $cvv);
+        if (is_numeric($cvv) && (strlen($cvv) == 3 || strlen($cvv) == 4) ){
+            $path       = sprintf('customers/%s/cards/%s', $openpay_customer, $openpay_cc);
+            $params     = array('cvv2' => $cvv);
+            $auth       = $this->private_key;
+            $dataCVV = $this->openpayRequest($path, 'PUT', $params);
+            if (isset($dataCVV->error_code)){
+                $this->response->setOutput('Error en la transacción: No se pudo completar tu pago.');
+                $this->log->write('CVV update has failed');
+            }
+        }else{
+            $this->response->setOutput('Error en la transacción: No se pudo completar tu pago.');
+            $this->log->write('CVV is not valid');
+        }
     }
     
     private function capture($trx_id, $total) {
@@ -725,7 +771,7 @@ class ControllerExtensionPaymentOpenpayCards extends Controller
         }
         
         $this->log->write('#eventAddOrderHistory Event fired: ' . $route);        
-        $this->log->write('Input json_encode => '.json_encode($args));   
+        $this->log->write('Input json_encode => '.json_encode($args));
         
         $order_status_id = (int) $args[1];
         $comment = "";
