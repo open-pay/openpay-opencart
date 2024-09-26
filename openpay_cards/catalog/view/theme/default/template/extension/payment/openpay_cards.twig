@@ -60,7 +60,7 @@
                     {{ entry_cc_number }}
                 </label>
                 <div class="col-sm-4">
-                    <input type="text" id="cc-number" class="form-control" data-openpay-card="card_number" autocomplete="off" maxlength="16">
+                    <input type="text" id="cc-number" name="card_number" class="form-control" data-openpay-card="card_number" autocomplete="off" maxlength="16">
                 </div>
             </div>
             <div class="form-group">
@@ -82,19 +82,24 @@
                     </select>
                 </div>
             </div>
+        </div>
+
+        <div id="payment_form_openpay_cards_cvv">
             <div class="form-group">
                 <label class="col-sm-2 control-label" for="cc-cvv">
                     {{ entry_cc_cvv2 }}
                 </label>
                 <div class="col-sm-2">
-                    <input id="cc-cvv" type="password" autocomplete="off" data-openpay-card="cvv2" class="form-control" maxlength="4">
+                    <input id="cc-cvv" type="password" name="cc_cvv" autocomplete="off" data-openpay-card="cvv2" class="form-control" maxlength="4">
                 </div>
                 <div class="col-sm-2">
                     <img data-toggle="popover" data-content="{{ help_cvc_back }}" src="https://openpay-plugins-screenshots.s3.amazonaws.com/cvc_back.png" alt="Tarjetas" class="cvv" style="cursor:pointer;">
                     <img data-toggle="popover" data-content="{{ help_cvc_front }}" src="https://openpay-plugins-screenshots.s3.amazonaws.com/cvc_front.png" alt="Tarjetas" class="cvv" style="cursor:pointer;">
                 </div>
-            </div>    
+            </div>
+        </div>
 
+        <div id="payment_form_openpay_cards_savecc">
             {% if save_cc %}    
                 <div class="form-group">
                     <label class="col-sm-2 control-label" for="save_cc">
@@ -105,7 +110,7 @@
                     </div>    
                 </div>     
             {% endif %}
-        </div>    
+        </div>
         
         {% if months_interest_free|length > 0 %}
             <div class="form-group">
@@ -185,20 +190,29 @@
         if( typeof OpenPay === 'undefined' ){
             var country = '{{ country }}';
             if(country === 'MX'){
-                var openpay_library = "https://openpay.s3.amazonaws.com/openpay.v1.min.js";
-                var openpay_anti_fraud = "https://openpay.s3.amazonaws.com/openpay-data.v1.min.js";
+                var openpay_library = "catalog/view/theme/default/javascript/MX/openpay.v1.min.js";
+                var hash_openpay = "sha256-WrWvhWLc23NGnw8DIxSdKvZEQT15ZApDSgV050k3Y5o=";
+                createScriptTag(openpay_library, hash_openpay);
+                var openpay_anti_fraud = "catalog/view/theme/default/javascript/MX/openpay-data.v1.min.js";
+                var hash_anti = "sha256-vk4t/D2uJZb05HIt9Yfl/G3j4TvqYfUggSNK6+Ykvyk=";
+                createScriptTag(openpay_anti_fraud, hash_anti);
             }else if(country === 'CO'){
-                var openpay_library = "https://resources.openpay.co/openpay.v1.min.js";
-                var openpay_anti_fraud = "https://resources.openpay.co/openpay-data.v1.min.js";
+                var openpay_library_co = "catalog/view/theme/default/javascript/CO/openpay.v1.min.js";
+                var hash_openpay_co = "sha256-OK9qfWKqHJYnsxWiqczAt8TTIOYYZbx30krm/wE6EmI=";
+                createScriptTag(openpay_library_co, hash_openpay_co);
+                var openpay_anti_fraud_co = "catalog/view/theme/default/javascript/CO/openpay-data.v1.min.js";
+                var hash_anti_co = "sha256-xUtB6hmMgZQlMrTCE/GHl2V5ApTEy5ozbenKwGxXiJw=";
+                createScriptTag(openpay_anti_fraud_co, hash_anti_co);
             }
-            createScriptTag(openpay_library);
-            createScriptTag(openpay_anti_fraud);
+
         }
 
-        function createScriptTag(url){
+        function createScriptTag(url, hash){
             var script = document.createElement( 'script');
             var head = document.getElementsByTagName( 'head' )[ 0 ];
             script.src = url;
+            script.integrity = hash;
+            script.crossorigin = "anonymous";
             head.appendChild( script );
             return;
         }
@@ -225,15 +239,22 @@
                 $('#cc-cvv').val("");                                                     
 
                 $('#payment_form_openpay_cards').hide();
+                $('#payment_form_openpay_cards_savecc').hide();
+
             } else {                    
                 $('#payment_form_openpay_cards').show();            
                 $('#save_cc').prop('disabled', false);
+                $('#payment_form_openpay_cards_savecc').show();
             }
         });  
 
         $('#payment-form').submit(function(event) {
             /* Prevent the form from submitting with the default action */
             event.preventDefault();
+
+            if (typeof OpenPay === 'undefined') {
+                alert("Archivo Js No Válido")
+            }
             
             $("#button-confirm").button( 'loading' );
             addMsg( '{{ text_wait }}' , 'warning' );
